@@ -12,6 +12,7 @@
   "description": "",
   "dependencies": {
     "@mediapipe/tasks-vision": "^0.10.22-rc.20250304",
+    "active-win": "^8.2.1",
     "electron": "^38.4.0"
   },
   "devDependencies": {

@@ -199,6 +199,17 @@
                 <div class="stat-label">Focus Score</div>
             </div>
         </div>
+
+        <div class="app-totals" style="margin-top:20px;text-align:left;">
+            <h3 style="font-size:16px;margin-bottom:8px;">Application totals</h3>
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+                <button id="refreshAppTotals" style="padding:6px 10px;border-radius:6px;border:none;background:#6366f1;color:white;">Refresh</button>
+                <button id="clearAppTotals" style="padding:6px 10px;border-radius:6px;border:none;background:#ef4444;color:white;">Clear Totals</button>
+            </div>
+            <ul id="appTotalsList" style="list-style:none;padding-left:0;margin:0;color:#333;font-size:14px;min-height:32px;">
+                <li>No data yet</li>
+            </ul>
+        </div>
     </div>
 
     <script type="module" src="./renderer.js"></script>

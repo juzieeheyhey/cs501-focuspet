@@ -1,8 +1,10 @@
 // import vision from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3";
 // const { FilesetResolver, FaceLandmarker } = vision;
 
-import { FilesetResolver, FaceLandmarker }
-    from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/vision_bundle.mjs";
+import { startCamera, stopCamera } from './camera.js';
+import { loadLandmarker, detectForVideo, closeLandmarker } from './landmarker.js';
+import { initActiveWindowTracker, startSessionTracking, stopSessionTracking, resetSessionTracking } from './activeWindowTracker.js';
+import { mergeTotals, saveLastSession } from './storage.js';
 
 // import { FilesetResolver, FaceLandmarker } from "@mediapipe/tasks-vision";
 
@@ -58,6 +60,7 @@ let lastSeenTs = 0;
 let eyesClosedSince = null;
 let becameLookingAt = null;
 let ema = { x: null, y: null }; // for future gaze use
+// Active-window tracker is implemented in features/activeWindowTracker.js
 
 // ====== UI helpers ======
 const states = {
@@ -149,45 +152,11 @@ function analyzeLandmarks(lms, w, h) {
     return { dx: (L.dx + R.dx) / 2, dy: (L.dy + R.dy) / 2, lidRatio: (L.lidRatio + R.lidRatio) / 2 };
 }
 
-async function setupCamera() {
-    const v = document.createElement("video");
-    v.autoplay = true;
-    v.playsInline = true;
-    v.muted = true;
-    const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user", width: 640, height: 480 },
-    });
-    v.srcObject = stream;
-    await v.play();
-    // For debug preview, you can append v into the DOM here
-    v.style.position = "fixed";
-    v.style.top = "16px";
-    v.style.right = "16px";
-    v.style.width = "240px";   // tweak size as you like
-    v.style.height = "auto";
-    v.style.borderRadius = "10px";
-    v.style.boxShadow = "0 8px 24px rgba(0,0,0,.25)";
-    v.style.zIndex = "9999";
-    v.style.pointerEvents = "none"; // clicks pass through
-    v.style.transform = "scaleX(-1)"; // mirror selfie view (optional)
-
-    document.body.appendChild(v);
-    return v;
-}
-
-async function loadModel() {
-    // With Electron + COOP/COEP enabled in main.js
-    const fileset = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm");
-    return await FaceLandmarker.createFromOptions(fileset, {
-        baseOptions: { modelAssetPath: "face_landmarker.task", delegate: "GPU" },
-        runningMode: "VIDEO",
-        numFaces: 1,
-    });
-}
+// Camera and landmarker logic have been moved to features/camera.js and features/landmarker.js
 
 async function trackLoop() {
     if (!sessionActive) return;
-    const det = await landmarker.detectForVideo(video, performance.now());
+    const det = await detectForVideo(landmarker, video, performance.now());
     const now = Date.now();
 
     if (det.faceLandmarks && det.faceLandmarks[0]) {
@@ -255,24 +224,36 @@ async function trackLoop() {
 }
 
 // ====== Public controls (wired to HTML onclick) ======
+
 async function startSession() {
     if (sessionActive) return;
     sessionActive = true;
     sessionStartTime = Date.now();
+    // Reset per-session state counters
+    lookingTimeTotal = 0;
+    awayTimeTotal = 0;
+    currentState = 'idle';
     stateStartTime = sessionStartTime;
-
-    // Backend session start (optional)
-    // post(`${BACKEND}/session/start`, { user: "Jessica" });
 
     // Start UI timer
     timerInterval = setInterval(updateTimerUI, 250);
 
+    // Reset active-window tracking for this session and request polling
+    resetSessionTracking();
+    startSessionTracking();
+
+    // Reset tracker/hysteresis state
+    offDirSince = null;
+    eyesClosedSince = null;
+    becameLookingAt = null;
+    ema = { x: null, y: null };
+
     // Camera + model
-    video = await setupCamera();
-    landmarker = await loadModel();
+    video = await startCamera();
+    landmarker = await loadLandmarker();
 
     // Initial state and loop
-    setState("away"); // until presence stabilizes
+    setState('away'); // until presence stabilizes
     lastSeenTs = 0;
     eyesClosedSince = null;
     becameLookingAt = null;
@@ -289,40 +270,37 @@ function stopSession() {
     // finalize current state's time
     const now = Date.now();
     const elapsed = now - stateStartTime;
-    if (currentState === "looking") lookingTimeTotal += elapsed;
-    else if (currentState === "away") awayTimeTotal += elapsed;
-
-    // Backend stop (optional)
-    // post(`${BACKEND}/session/stop`, null);
+    if (currentState === 'looking') lookingTimeTotal += elapsed;
+    else if (currentState === 'away') awayTimeTotal += elapsed;
 
     // stop UI timer
     clearInterval(timerInterval);
     timerInterval = null;
 
     // stop camera/model
-    try {
-        landmarker?.close();
-    } catch { }
+    try { closeLandmarker(landmarker); } catch { }
     landmarker = null;
     if (video) {
-        try {
-            if (video.srcObject) {
-                for (const t of video.srcObject.getTracks()) t.stop();
-            }
-        } catch { }
-        // remove preview element from DOM so the camera view closes
-        try {
-            if (video.parentNode) video.parentNode.removeChild(video);
-        } catch { }
+        try { stopCamera(video); } catch { }
         video = null;
         offDirSince = null;
         lastSeenTs = 0;
     }
 
+    // finalize active-window tracking for this session and persist
+    try {
+        const sessionBreakdown = stopSessionTracking();
+        const totals = mergeTotals(sessionBreakdown);
+        saveLastSession(sessionBreakdown);
+        console.log('Session appTimes saved:', sessionBreakdown, 'totals merged:', totals);
+        // refresh UI totals if present
+        try { renderAppTotals(); } catch { }
+    } catch (e) { console.error('failed to finalize session app times', e); }
+
     startBtn.disabled = false;
     stopBtn.disabled = true;
 
-    setState("idle");
+    setState('idle');
 }
 
 // Expose functions so your HTML onclick handlers work
@@ -332,4 +310,40 @@ function stopSession() {
 export function initEyeTrackerUI() {
     startBtn.addEventListener('click', startSession);
     stopBtn.addEventListener('click', stopSession);
+    // Initialize active-window tracker (it will subscribe to preload events)
+    try { initActiveWindowTracker(); } catch { }
+    // Render app totals panel if present
+    try { renderAppTotals(); } catch { }
+    // wire up refresh/clear buttons if present
+    try {
+        const refreshBtn = document.getElementById('refreshAppTotals');
+        const clearBtn = document.getElementById('clearAppTotals');
+        if (refreshBtn) refreshBtn.addEventListener('click', renderAppTotals);
+        if (clearBtn) clearBtn.addEventListener('click', () => {
+            localStorage.removeItem('appTotals');
+            localStorage.removeItem('lastSessionAppTimes');
+            renderAppTotals();
+        });
+    } catch { }
+}
+
+// Renders app totals into the UI element `#appTotalsList` if present
+export function renderAppTotals() {
+    try {
+        const el = document.getElementById('appTotalsList');
+        if (!el) return;
+        const totals = JSON.parse(localStorage.getItem('appTotals') || '{}');
+        el.innerHTML = '';
+        const entries = Object.entries(totals).sort((a, b) => b[1] - a[1]);
+        if (entries.length === 0) {
+            el.textContent = 'No data yet';
+            return;
+        }
+        for (const [app, ms] of entries) {
+            const li = document.createElement('li');
+            const secs = Math.round(ms / 1000);
+            li.textContent = `${app}: ${secs}s`;
+            el.appendChild(li);
+        }
+    } catch (e) { console.error('renderAppTotals failed', e); }
 }
