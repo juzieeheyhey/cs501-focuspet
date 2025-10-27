@@ -304,10 +304,20 @@ function stopSession() {
         landmarker?.close();
     } catch { }
     landmarker = null;
-    if (video?.srcObject) {
-        for (const t of video.srcObject.getTracks()) t.stop();
+    if (video) {
+        try {
+            if (video.srcObject) {
+                for (const t of video.srcObject.getTracks()) t.stop();
+            }
+        } catch { }
+        // remove preview element from DOM so the camera view closes
+        try {
+            if (video.parentNode) video.parentNode.removeChild(video);
+        } catch { }
+        video = null;
+        offDirSince = null;
+        lastSeenTs = 0;
     }
-    video = null;
 
     startBtn.disabled = false;
     stopBtn.disabled = true;
