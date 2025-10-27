@@ -101,7 +101,24 @@ async function applyFromStorage() {
     }
 }
 
-// On install/boot, sync from storage
+
 chrome.runtime.onInstalled.addListener(applyFromStorage);
 chrome.runtime.onStartup?.addListener(applyFromStorage);
-
+chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+    (async () => {
+        if (msg.type === "APPLY") {
+            await chrome.storage.local.set({
+                allowlist: msg.allowlist || [],
+                blacklist: msg.blacklist || [],
+                sessionOn: !!msg.sessionOn
+            });
+            await applyFromStorage();
+            sendResponse({ ok: true });
+        } else if (msg.type === "CLEAR") {
+            await chrome.storage.local.set({ sessionOn: false });
+            await clearRules();
+            sendResponse({ ok: true });
+        }
+    })();
+    return true;
+});
