@@ -1,14 +1,14 @@
-/* === SAD VARIANT =================================================== */
-/* Use: <div class="husky husky--sad">…</div> */
+/* === SAD =================================================== */
+/* use: <div class="husky husky--sad">…</div> */
 
-/* 0) Lock global transforms */
+/* lock global transforms */
 .husky.husky--sad { transform: none !important; }
 .husky.husky--sad .husky-head,
 .husky.husky--sad .husky-face,
 .husky.husky--sad .husky-nose,
 .husky.husky--sad .husky-mouth { transform: none !important; }
 
-/* 1) Legs (match happy pose) */
+/* legs */
 .husky.husky--sad .husky-front-legs {
     position: absolute;
     width: 55%;
@@ -34,7 +34,7 @@
     right: 45%;
 }
 
-/* 2) Ears */
+/* ears */
 .husky.husky--sad .husky-ear { top: 3%; left: -10%; }
 .husky.husky--sad .husky-ear:nth-child(2) { top: 5%; left: 15%; }
 .husky.husky--sad .husky-ears .husky-ear:nth-child(2)::after {
@@ -44,16 +44,16 @@
     border: none !important;
 }
 
-/* 3) Mouth + lips (flip smile, hide tongue, no mouth covers) */
+/* mouth + lips */
 .husky .husky-tongue { display: none !important; }
 .husky.husky--sad .husky-lips {
     transform: scaleY(-1);
     transform-origin: center 60%;
 }
 .husky.husky--sad .husky-mouth::before,
-.husky.husky--sad .husky-mouth::after { display: none; } /* remove base “covers” if any */
+.husky.husky--sad .husky-mouth::after { display: none; }
 
-/* Corner dimples (base style retained; sad variant refines below) */
+/* corner dimples (base style retained; sad variant refines below) */
 .husky .husky-mouth::before {
     content: "";
     position: absolute;
@@ -65,7 +65,7 @@
     filter: drop-shadow(0 0 0 rgba(0,0,0,0));
 }
 
-/* Sad mouth fine-tuning */
+/* sad mouth */
 .husky.husky--sad .husky-mouth {
     left: 40%;
     top: 60%;
@@ -85,9 +85,9 @@
 .husky.husky--sad .husky-mouth::before {
     background: conic-gradient(from 228deg at 30% 62%, #A3ADBB 0 28deg, transparent 0 360deg);
 }
-.husky.husky--sad .husky-lips::after { display: none; } /* shorter philtrum notch = none */
+.husky.husky--sad .husky-lips::after { display: none; }
 
-/* 4) Eyes (subtle droop + gentle sway) */
+/* eyes */
 .husky.husky--sad .husky-eye::before {
     top: 55%;
     animation: pupil-sway-sad 4.2s ease-in-out infinite;
@@ -100,7 +100,7 @@
     100% { transform: translate(0, 0); }
 }
 
-/* 5) Eyebrows */
+/* eyebrows */
 .husky.husky--sad .husky-brows {
     position: absolute;
     inset: 0;
@@ -118,7 +118,7 @@
 .husky.husky--sad .husky-brow--left  { left: 58%; transform: rotate(20deg); }
 .husky.husky--sad .husky-brow--right { right: 53%; transform: rotate(-20deg); }
 
-/* 6) Tears */
+/* tears */
 .husky.husky--sad .husky-tears {
     position: absolute;
     inset: 0;
