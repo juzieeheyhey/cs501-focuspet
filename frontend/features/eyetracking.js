@@ -1,24 +1,9 @@
-// import vision from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3";
-// const { FilesetResolver, FaceLandmarker } = vision;
 
 import { startCamera, stopCamera } from './camera.js';
 import { loadLandmarker, detectForVideo, closeLandmarker } from './landmarker.js';
 import { initActiveWindowTracker, startSessionTracking, stopSessionTracking, resetSessionTracking } from './activeWindowTracker.js';
 import { mergeTotals, saveLastSession } from './storage.js';
 
-// import { FilesetResolver, FaceLandmarker } from "@mediapipe/tasks-vision";
-
-// Optional backend URL (comment out post() calls if you don't use it yet)
-// const BACKEND = "http://127.0.0.1:5055";
-// async function post(url, body) {
-//     try {
-//         await fetch(url, {
-//             method: "POST",
-//             headers: { "Content-Type": "application/json" },
-//             body: body == null ? null : JSON.stringify(body),
-//         });
-//     } catch { }
-// }
 
 // ====== UI elements (match your HTML IDs) ======
 const startBtn = document.getElementById("startBtn");
@@ -39,7 +24,7 @@ const DIRECTION_HOLD_MS = 600; // how long off-direction must persist
 const GAZE_X_MAX = 0.6;        // left/right limit (normalized)
 const GAZE_Y_MAX_DOWN = 0.35;  // looking down past this => likely phone
 const GAZE_Y_MAX_UP = 0.5;     // optional (looking far up)
-let offDirSince = null;
+let offDirSince = null; // time stamp since the user is looking away from the screen
 
 // ====== App/session state ======
 let sessionActive = false;
@@ -58,7 +43,7 @@ let video = null;
 let landmarker = null;
 let lastSeenTs = 0;
 let eyesClosedSince = null;
-let becameLookingAt = null;
+// let becameLookingAt = null;
 let ema = { x: null, y: null }; // for future gaze use
 // Active-window tracker is implemented in features/activeWindowTracker.js
 
@@ -69,8 +54,9 @@ const states = {
     away: { icon: "😿", text: "AWAY", class: "state-away" },
 };
 
+// set the state of the tracker
 function setState(newState) {
-    if (currentState === newState) return;
+    if (currentState === newState) return; // if the state is the same, do nothing
 
     // finalize previous state's time
     const now = Date.now();
@@ -78,22 +64,22 @@ function setState(newState) {
     if (currentState === "looking") lookingTimeTotal += elapsed;
     else if (currentState === "away") awayTimeTotal += elapsed;
 
+    // update the state of the tracker and the time it started
     currentState = newState;
     stateStartTime = now;
 
-    const s = states[newState];
+    // update the UI to the new state
+    const s = states[newState]; // get the state icon and text
     stateIcon.textContent = s.icon;
     stateText.textContent = s.text;
     stateText.className = `state-text ${s.class}`;
 
-    // Optional backend attention flip
-    // if (sessionActive) {
-    //     post(`${BACKEND}/events/attention`, { present: newState === "looking", ts: now });
-    // }
+
 }
 
+// update the timer UI, looking time, and away time, and focus score
 function updateTimerUI() {
-    if (!sessionActive) return;
+    if (!sessionActive) return; // if the session is not active, do nothing
     totalSessionTime = Date.now() - sessionStartTime;
 
     // format hh:mm:ss
@@ -122,8 +108,19 @@ const smoothEMA = (prev, val, a = 0.25) => (prev == null ? val : prev + a * (val
 
 // ====== MediaPipe helpers ======
 function analyzeLandmarks(lms, w, h) {
-    // Left: corners [33,133], lids [159,145], iris [468..472]
-    // Right: corners [362,263], lids [386,374], iris [473..477]
+    // analyze the list of landmarks returned by the landmarker and return the eye position and lid ratio
+
+    // inputs:
+    // - lms: list of landmarks, each landmark is an object with cordinates. 
+    // - w: width of the video
+    // - h: height of the video
+
+    // outputs:
+    // - dx: horizontal eye position
+    // - dy: vertical eye position
+    // - lidRatio: ratio of the eye lid to the eye
+
+    // indices of the landmarks for the left and right eye (defined in the MediaPipe documentation)
     const idx = {
         Lc: [33, 133],
         Rc: [362, 263],
@@ -133,6 +130,7 @@ function analyzeLandmarks(lms, w, h) {
         Ri: [473, 474, 475, 476, 477],
     };
     const eye = (corners, lids, irisIdx) => {
+        // take the landmark coordinates of one eye and compute gaze direction  and lid ratio
         const [c0, c1] = corners.map((i) => lms[i]);
         const [t, b] = lids.map((i) => lms[i]);
         const iris = irisIdx.map((i) => lms[i]);
@@ -142,9 +140,9 @@ function analyzeLandmarks(lms, w, h) {
         const ic = iris.reduce((a, p) => ({ x: a.x + p.x, y: a.y + p.y }), { x: 0, y: 0 });
         ic.x /= iris.length;
         ic.y /= iris.length;
-        const dx = (ic.x - ec.x) * w / (ew || 1);
-        const dy = (ic.y - ec.y) * h / (eh || 1);
-        const lidRatio = eh / (ew || 1);
+        const dx = (ic.x - ec.x) * w / (ew || 1); // horizontal gaze direction, dx > 0 -> looking right, dx < 0 -> looking left
+        const dy = (ic.y - ec.y) * h / (eh || 1); // vertical gaze direction, dy > 0 -> looking down, dy < 0 -> looking up
+        const lidRatio = eh / (ew || 1);// ratio of the eye lid to the eye, lidRatio > 0.5 -> eyes are closed, lidRatio < 0.5 -> eyes are open
         return { dx, dy, lidRatio };
     };
     const L = eye(idx.Lc, idx.Ll, idx.Li);
@@ -154,6 +152,7 @@ function analyzeLandmarks(lms, w, h) {
 
 // Camera and landmarker logic have been moved to features/camera.js and features/landmarker.js
 
+// Main tracking loop
 async function trackLoop() {
     if (!sessionActive) return;
     const det = await detectForVideo(landmarker, video, performance.now());
@@ -169,11 +168,11 @@ async function trackLoop() {
         ema.x = smoothEMA(ema.x, dx);
         ema.y = smoothEMA(ema.y, dy);
 
-        // Off-direction if gaze far left/right OR down for a while
+        // Off-direction if gaze far left/right OR down/up for a while
         const offDir =
-            Math.abs(ema.x) > GAZE_X_MAX ||
+            Math.abs(ema.x) > GAZE_X_MAX || // looking far left or right
             ema.y > GAZE_Y_MAX_DOWN ||      // looking down (phone)
-            ema.y < -GAZE_Y_MAX_UP;         // optional: far up
+            ema.y < -GAZE_Y_MAX_UP;         // looking far up
 
         if (offDir) {
             if (offDirSince == null) offDirSince = now;
@@ -207,10 +206,7 @@ async function trackLoop() {
             eyesClosedSince = null;
         }
 
-        // (Optional) send a sparse gaze sample to backend
-        // if ((now % 150) < 16) {
-        //     post(`${BACKEND}/events/gaze`, { x: ema.x, y: ema.y, blink: false, conf: 1.0, ts: now });
-        // }
+
     } else {
         // Absent hysteresis → AWAY
         if (lastSeenTs !== 0 && Date.now() - lastSeenTs >= ABSENT_MS) {
@@ -302,10 +298,6 @@ function stopSession() {
 
     setState('idle');
 }
-
-// Expose functions so your HTML onclick handlers work
-// window.startSession = startSession;
-// window.stopSession = stopSession;
 
 export function initEyeTrackerUI() {
     startBtn.addEventListener('click', startSession);

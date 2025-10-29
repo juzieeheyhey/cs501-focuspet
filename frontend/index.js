@@ -37,7 +37,7 @@ function createWindow() {
     });
 
     mainWindow.loadFile(path.join(process.cwd(), 'index.html'));
-    mainWindow.webContents.openDevTools(); // Open DevTools for debugging
+    // mainWindow.webContents.openDevTools(); // Open DevTools for debugging
 
     // NOTE: active-win polling is controlled by renderer requests (start/stop).
     // We do NOT start polling here so the renderer can request polling only when a session is active.
@@ -52,50 +52,50 @@ function createWindow() {
     });
 
 
-function startActiveWindowPolling(ms = 1000) {
-    if (activeWinInterval) return;
-    let prevOwnerName = null;
-    // send initial state immediately
-    (async () => {
-        try {
-            const info = await activeWin();
-            const ownerName = info?.owner?.name || 'unknown';
-            prevOwnerName = ownerName;
-            if (info && mainWindow?.webContents) mainWindow.webContents.send('active-window', info);
-        } catch (err) { /* ignore */ }
-    })();
-
-    activeWinInterval = setInterval(async () => {
-        try {
-            const info = await activeWin();
-            const ownerName = info?.owner?.name || 'unknown';
-            // Only forward when the active application changes to reduce noise
-            if (ownerName !== prevOwnerName) {
+    function startActiveWindowPolling(ms = 1000) {
+        if (activeWinInterval) return;
+        let prevOwnerName = null;
+        // send initial state immediately
+        (async () => {
+            try {
+                const info = await activeWin();
+                const ownerName = info?.owner?.name || 'unknown';
                 prevOwnerName = ownerName;
-                if (info && mainWindow?.webContents) {
-                    mainWindow.webContents.send('active-window', info);
+                if (info && mainWindow?.webContents) mainWindow.webContents.send('active-window', info);
+            } catch (err) { /* ignore */ }
+        })();
+
+        activeWinInterval = setInterval(async () => {
+            try {
+                const info = await activeWin();
+                const ownerName = info?.owner?.name || 'unknown';
+                // Only forward when the active application changes to reduce noise
+                if (ownerName !== prevOwnerName) {
+                    prevOwnerName = ownerName;
+                    if (info && mainWindow?.webContents) {
+                        mainWindow.webContents.send('active-window', info);
+                    }
                 }
+            } catch (err) {
+                console.error('active-win error', err);
             }
-        } catch (err) {
-            console.error('active-win error', err);
-        }
-    }, ms);
-}
+        }, ms);
+    }
 
-function stopActiveWindowPolling() {
-    if (!activeWinInterval) return;
-    clearInterval(activeWinInterval);
-    activeWinInterval = null;
-}
+    function stopActiveWindowPolling() {
+        if (!activeWinInterval) return;
+        clearInterval(activeWinInterval);
+        activeWinInterval = null;
+    }
 
-// IPC controls (optional): allow renderer to start/stop or request one-shot
-ipcMain.on('active-window-start', () => startActiveWindowPolling());
-ipcMain.on('active-window-stop', () => stopActiveWindowPolling());
-ipcMain.handle('get-active-window', async () => {
-    try {
-        return await activeWin();
-    } catch { return null; }
-});
+    // IPC controls (optional): allow renderer to start/stop or request one-shot
+    ipcMain.on('active-window-start', () => startActiveWindowPolling());
+    ipcMain.on('active-window-stop', () => stopActiveWindowPolling());
+    ipcMain.handle('get-active-window', async () => {
+        try {
+            return await activeWin();
+        } catch { return null; }
+    });
 
 }
 

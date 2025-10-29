@@ -33,6 +33,7 @@ function toConditions(pattern) {
 }
 
 
+// helper fynction to build properly formatted rulesfor Chrome API
 function makeRuleBase(id, priority, actionType, condition) {
     const resourceTypes = [
         "main_frame", "sub_frame", "xmlhttprequest", "script", "image", "media",
@@ -57,10 +58,10 @@ function makeRuleBase(id, priority, actionType, condition) {
     };
 }
 
-
+// set the rules for the browser filter
 async function setRules(allowlist, blacklist) {
     const toAdd = [];
-    let nextId = 10000;
+    let nextId = 10000; // starting id for the rules
 
     // Whitelist first (higher priority)
     for (const pat of allowlist) {
@@ -91,6 +92,7 @@ async function clearRules() {
     }
 }
 
+// apply the rules from the storage
 async function applyFromStorage() {
     const { allowlist = [], blacklist = [], sessionOn = false } =
         await chrome.storage.local.get({ allowlist: [], blacklist: [], sessionOn: false });
@@ -101,12 +103,13 @@ async function applyFromStorage() {
     }
 }
 
-
+// listen for events from the extension
 chrome.runtime.onInstalled.addListener(applyFromStorage);
 chrome.runtime.onStartup?.addListener(applyFromStorage);
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     (async () => {
         if (msg.type === "APPLY") {
+            // apply the rules from the storage
             await chrome.storage.local.set({
                 allowlist: msg.allowlist || [],
                 blacklist: msg.blacklist || [],
@@ -115,6 +118,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
             await applyFromStorage();
             sendResponse({ ok: true });
         } else if (msg.type === "CLEAR") {
+            // clear the rules from the storage
             await chrome.storage.local.set({ sessionOn: false });
             await clearRules();
             sendResponse({ ok: true });
