@@ -1,6 +1,6 @@
 # FocusPet (frontend)
 
-Quick start
+**Quick Start**
 
 1. Install dependencies
 
@@ -17,7 +17,7 @@ npm start
 
 The `start` script runs Electron (`electron .`) and opens the app window. During development the app opens DevTools automatically — you can disable that by editing `index.js`.
 
-What the main parts do
+**What the Main Parts Do**
 
 - `index.js` (main process)
 	- Creates the Electron BrowserWindow and sets security headers (COOP/COEP) required to run MediaPipe WASM in the renderer.
@@ -49,3 +49,25 @@ What the main parts do
 - `features/browser-filter/extension/`
 	- Companion MV3 Chrome extension (popup + service worker) that can apply dynamic declarativeNetRequest rules to allow/block sites; the extension saves allowlist/blacklist rules to `chrome.storage.local`.
 
+# FocusPet (CSS Animation)
+
+This subfolder contains the animated Husky for FocusPet, currently with two emotional states: Happy and Sad.
+It’s a static demo built entirely with HTML and CSS.
+
+**Quick Start**
+
+Open the HTML files in a browser
+
+```bash
+# Happy Husky
+open css-animation/index.html
+
+# Sad Husky
+open css-animation/index2.html
+```
+**How It Works**
+
+- `index.html` loads `husky.css` for the happy animation.
+- `index2.html` loads `husky_sad.css` for the sad animation.
+- Each page uses the same HTML structure, containing a nested set of `<div>` elements that form the husky’s body parts (`.husky-head`, `.husky-face`, `.husky-ear`, etc.).
+- CSS keyframes animate these parts (e.g. wagging tail, blinking eyes, tilting head) to create lifelike motion.
