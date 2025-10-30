@@ -1,200 +1,196 @@
-@import '../node_modules/sass-svg/index';
-
 $husky-colors: (
-  'bg': #4F8EDB,
-  'primary': #383B44,
-  'white': white,
-  'light': #A3ADBB,
-  'lighter': #B9C4D3,
-  'dark': darken(#383B44, 5%),
-  'ear': #DE6465,
-  'eye': #5D8BC3,
-  'tongue': #DE6465,
-  'snow': mix(white, #4F8EDB, 80%)
+        'bg': #4F8EDB,
+        'primary': #383B44,
+        'white': white,
+        'light': #A3ADBB,
+        'lighter': #B9C4D3,
+        'dark': darken(#383B44, 5%),
+        'ear': #DE6465,
+        'eye': #5D8BC3,
+        'tongue': #DE6465,
+        'snow': mix(white, #4F8EDB, 80%)
 );
 
 @function husky-color($name) {
   @return map-get($husky-colors, $name);
 }
 
+// duration & timeline scale for keyframe maps
 $duration: 12s;
 $total-kf: 15;
 
 $k-head: (
-  0: rotate(0),
-  1: rotate(0),
-  3: rotate(-14deg),
-  6: rotate(-7deg),
-  7: rotate(-14deg),
-  9: rotate(-7deg),
-  11: rotate(0),
-  12: rotate(0)
+        0: rotate(0),
+        1: rotate(0),
+        3: rotate(-14deg),
+        6: rotate(-7deg),
+        7: rotate(-14deg),
+        9: rotate(-7deg),
+        11: rotate(0),
+        12: rotate(0)
 );
 
 $k-mouth: (
-  0: translateX(0),
-  1: translateX(0),
-  2: translateX(35%),
-  3: translateX(35%),
-  4: translateX(35%),
-  5: translateX(0) translateY(-5%)
+        0: translateX(0),
+        1: translateX(0),
+        2: translateX(35%),
+        3: translateX(35%),
+        4: translateX(35%),
+        5: translateX(0) translateY(-5%)
 );
 
 $k-nose: (
-  0: translate(0),
-  1: translate(0),
-  2: translateX(100%),
-  4: translateX(100%),
-  5: translateX(0) translateY(-15%)
+        0: translate(0),
+        1: translate(0),
+        2: translateX(100%),
+        4: translateX(100%),
+        5: translateX(0) translateY(-15%)
 );
 
 $k-body: (
-  0: translate(0),
-  1: translateY(3%),
-  2: translate(0),
-  3: translate(0),
-  4: translateY(2%),
-  5: translateY(0),
+        0: translate(0),
+        1: translateY(3%),
+        2: translate(0),
+        3: translate(0),
+        4: translateY(2%),
+        5: translateY(0),
 );
 
 $k-mane: map-merge($k-body, (
-  1: translateY(5%),
-  4: translateY(3%)
+        1: translateY(5%),
+        4: translateY(3%)
 ));
 
 $k-face: (
-  0: translate(0),
-  1: translate(0),
-  2: translateX(15%),
-  3: translateX(15%) translateY(0),
-  4: translateX(15%) translateY(0),
-  5: translateX(0) translateY(-15%),
-  6: translateX(0) translateY(-15%),
-  7: translateX(0) translateY(0),
+        0: translate(0),
+        1: translate(0),
+        2: translateX(15%),
+        3: translateX(15%) translateY(0),
+        4: translateX(15%) translateY(0),
+        5: translateX(0) translateY(-15%),
+        6: translateX(0) translateY(-15%),
+        7: translateX(0) translateY(0),
 );
 
 $k-left-eye: (
-  0.4: scaleY(1),
-  0.5: scaleY(0.3),
-  0.6: scaleY(1),
-  1: translateX(0),
-  1.4: scaleY(1) translateX(75%),
-  1.5: scaleY(0.3) translateX(75%),
-  1.6: scaleY(1) translateX(75%),
-  2: translateX(150%),
-  3.3: scaleY(1) translateX(150%),
-  3.4: scaleY(0.3) translateX(150%),
-  3.5: scaleY(1) translateX(150%),
-  3.8: scaleY(1) translateX(150%),
-  3.9: scaleY(0.3) translateX(150%),
-  4.0: scaleY(1) translateX(150%),
-  5: translateX(0) translateY(-170%),
-  5.4: scaleY(1) translateY(-170%),
-  5.5: scaleY(0.3) translateY(-170%),
-  5.6: scaleY(1) translateY(-170%),
-  5.7: scaleY(1) translateY(-170%),
-  5.8: scaleY(0.3) translateY(-170%),
-  5.9: scaleY(1) translateY(-170%),
-  8: translateY(0),
-  9.8: scaleY(1) translateY(0),
-  9.9: scaleY(0.3) translateY(0),
-  10.0: scaleY(1) translateY(0),
-  10.5: scaleY(1) translateY(0),
-  10.6: scaleY(0.3) translateY(0),
-  10.7: scaleY(1) translateY(0),
+        0.4: scaleY(1),
+        0.5: scaleY(0.3),
+        0.6: scaleY(1),
+        1: translateX(0),
+        1.4: scaleY(1) translateX(75%),
+        1.5: scaleY(0.3) translateX(75%),
+        1.6: scaleY(1) translateX(75%),
+        2: translateX(150%),
+        3.3: scaleY(1) translateX(150%),
+        3.4: scaleY(0.3) translateX(150%),
+        3.5: scaleY(1) translateX(150%),
+        3.8: scaleY(1) translateX(150%),
+        3.9: scaleY(0.3) translateX(150%),
+        4.0: scaleY(1) translateX(150%),
+        5: translateX(0) translateY(-170%),
+        5.4: scaleY(1) translateY(-170%),
+        5.5: scaleY(0.3) translateY(-170%),
+        5.6: scaleY(1) translateY(-170%),
+        5.7: scaleY(1) translateY(-170%),
+        5.8: scaleY(0.3) translateY(-170%),
+        5.9: scaleY(1) translateY(-170%),
+        8: translateY(0),
+        9.8: scaleY(1) translateY(0),
+        9.9: scaleY(0.3) translateY(0),
+        10.0: scaleY(1) translateY(0),
+        10.5: scaleY(1) translateY(0),
+        10.6: scaleY(0.3) translateY(0),
+        10.7: scaleY(1) translateY(0),
 );
 
 $k-right-eye: $k-left-eye;
 
 $k-tongue: (
-  7: translateY(0),
-  8: translateY(100%) rotate(10deg),
-  11: translateY(100%) rotate(10deg),
-  12: translateY(0)
+        7: translateY(0),
+        8: translateY(100%) rotate(10deg),
+        11: translateY(100%) rotate(10deg),
+        12: translateY(0)
 );
 
 $k-mouth-cover-left: (
-  6: rotate(0),
-  9: rotate(90deg),
-  11: rotate(90deg),
-  13: rotate(0)
+        6: rotate(0),
+        9: rotate(90deg),
+        11: rotate(90deg),
+        13: rotate(0)
 );
 
 $k-mouth-cover-right: (
-  6: rotate(0),
-  9: rotate(-90deg),
-  11: rotate(-90deg),
-  13: rotate(0)
+        6: rotate(0),
+        9: rotate(-90deg),
+        11: rotate(-90deg),
+        13: rotate(0)
 );
 
 $k-tail: (
-  1: rotate(0),
-  1.5: rotate(30deg),
-  2: rotate(0),
-  3: rotate(0),
-  4: rotate(30deg),
-  7: rotate(30deg),
-  7.25: rotate(0),
+        1: rotate(0),
+        1.5: rotate(30deg),
+        2: rotate(0),
+        3: rotate(0),
+        4: rotate(30deg),
+        7: rotate(30deg),
+        7.25: rotate(0),
 );
 $tail-wags: 14;
 $tail-interval: (11 - 7.5) / $tail-wags;
 @for $i from 1 through $tail-wags {
   $k-tail: map-merge($k-tail, (
-    (($i - 1) * $tail-interval + 7.5): rotate(28deg),
-    (($i - 0.5) * $tail-interval + 7.5): rotate(0)
+                  (($i - 1) * $tail-interval + 7.5): rotate(28deg),
+                  (($i - 0.5) * $tail-interval + 7.5): rotate(0)
   )) !global;
 }
 
 $k-left-ear: (
-  0: rotate(6deg),
-  1: rotate(6deg),
-  2: rotate(15deg),
-  4: rotate(15deg),
-  5: rotate(30deg),
-  6: rotate(30deg),
-  7: rotate(0deg),
-  8: rotate(0deg),
-  9: rotate(15deg),
-  12: rotate(15deg),
-  14: rotate(6deg),
-  $total-kf: rotateZ(6deg)
+        0: rotate(6deg),
+        1: rotate(6deg),
+        2: rotate(15deg),
+        4: rotate(15deg),
+        5: rotate(30deg),
+        6: rotate(30deg),
+        7: rotate(0deg),
+        8: rotate(0deg),
+        9: rotate(15deg),
+        12: rotate(15deg),
+        14: rotate(6deg),
+        $total-kf: rotateZ(6deg)
 );
 
 $k-right-ear: (
-  0: rotateZ(-16deg),
-  1: rotateZ(-16deg),
-  2: rotateZ(-19deg),
-  4: rotateZ(-19deg),
-  5: rotateZ(-30deg),
-  
-  5.5: rotateZ(-19deg),
-  5.6: rotateZ(-30deg),
-  5.7: rotateZ(-19deg),
-  6: rotateZ(-19deg),
-  6.1: rotateZ(-30deg),
-  6.2: rotateZ(-19deg),
-
-  7: rotateZ(-9deg),
-  8: rotateZ(-9deg),
-  
-  9: rotateZ(-19deg),
-  9.1: rotateZ(-30deg),
-  9.2: rotateZ(-19deg),
-  9.4: rotateZ(-19deg),
-  9.5: rotateZ(-30deg),
-  9.6: rotateZ(-19deg),
-  
-  12: rotateZ(-19deg),
-  14: rotateZ(-16deg),
-  $total-kf: rotateZ(-16deg)
+        0: rotateZ(-16deg),
+        1: rotateZ(-16deg),
+        2: rotateZ(-19deg),
+        4: rotateZ(-19deg),
+        5: rotateZ(-30deg),
+        5.5: rotateZ(-19deg),
+        5.6: rotateZ(-30deg),
+        5.7: rotateZ(-19deg),
+        6: rotateZ(-19deg),
+        6.1: rotateZ(-30deg),
+        6.2: rotateZ(-19deg),
+        7: rotateZ(-9deg),
+        8: rotateZ(-9deg),
+        9: rotateZ(-19deg),
+        9.1: rotateZ(-30deg),
+        9.2: rotateZ(-19deg),
+        9.4: rotateZ(-19deg),
+        9.5: rotateZ(-30deg),
+        9.6: rotateZ(-19deg),
+        12: rotateZ(-19deg),
+        14: rotateZ(-16deg),
+        $total-kf: rotateZ(-16deg)
 );
 
 @each $i, $prop in $k-right-ear {
   $k-right-ear: map-merge($k-right-ear, (
-    $i: $prop + ' ' + rotateY(180deg)
+          $i: $prop + ' ' + rotateY(180deg)
   ));
 }
 
+// map to @keyframes
 @mixin effect($name, $kf) {
   @keyframes #{$name} {
     @each $interval, $transform in $kf {
@@ -205,6 +201,7 @@ $k-right-ear: (
   }
 }
 
+// generate keyframes
 @include effect('husky-head', $k-head);
 @include effect('husky-mouth', $k-mouth);
 @include effect('husky-nose', $k-nose);
@@ -224,15 +221,6 @@ body {
   background-color: husky-color('bg');
 }
 
-.codrops-header h1 {
-	animation: squigglevision 0.3s infinite;
-	animation-timing-function: cubic-bezier(0, 0, 0.80, 0.90);
-}
-
-.codrops-icon--drop:before {
-  color: #3B6BA5;
-}
-
 .content--husky {
   display: flex;
   flex-direction: column;
@@ -246,7 +234,7 @@ body {
   margin: 0;
   padding: 3rem 0;
   animation: squigglevision 0.3s infinite;
-  
+
   *, *:before, *:after {
     animation-timing-function: cubic-bezier(0.645, 0.045, 0.355, 1) !important;
   }
@@ -261,34 +249,6 @@ body {
     background-repeat: no-repeat;
     background-size: 395vmin;
     background-position: -150vmin calc(100% + 11vmin);
-  }
-
-  &:before, &:after {  
-    @include svg((height: 78, width: 500, viewBox: (0 0 500 78))) {
-      @include svg('path', (
-        fill: husky-color('snow'),
-        d: 'M375,27c-37,0-82.5-19-125-19s-88,19-125,19S42.5,8,0,8v70h250h250V8C457.5,8,412,27,375,27z'
-      ));
-      @include svg('polygon', (
-        fill: rgba(black, 0.5),
-        points: '256.3,0 254.7,6.5 256.1,6.5 256.1,8.4 256.3,8.4 256.5,8.4 256.5,6.5 258,6.5'
-      ));
-      @include svg('polygon', (
-        fill: rgba(black, 0.5),
-        points: '252.8,0 251.2,6.5 252.6,6.5 252.6,8.4 252.8,8.4 253,8.4 253,6.5 254.4,6.5'
-      ));
-      @include svg('polygon', (
-        fill: rgba(black, 0.5),
-        points: '21.4,1.3 19.7,7.8 21.2,7.8 21.2,9.7 21.4,9.7 21.6,9.7 21.6,7.8 23,7.8'
-      ));
-    }
-  }
-
-  @include svg((height: 78, width: 500, viewBox: (0 0 500 78))) {
-    @include svg('path', (
-      fill: husky-color('snow'),
-      d: 'M375,27c-37,0-82.5-19-125-19s-88,19-125,19S42.5,8,0,8v70h250h250V8C457.5,8,412,27,375,27z'
-    ));
   }
 
   &:before {
@@ -320,12 +280,12 @@ body {
   animation: husky-squiggly-anim 0.3s infinite;
   height: 48vmin;
   width: 67.2vmin;
-  
+
   @media screen and (max-width: 400px) {
     // Chrome for Android chokes
     animation: husky-none;
   }
-  
+
   &:before {
     width: 70%;
     height: 0.4vmin;
@@ -335,7 +295,7 @@ body {
     left: 5%;
     z-index: 2;
   }
-  
+
   &:after {
     width: 100vw;
     left: 50%;
@@ -355,7 +315,7 @@ body {
   left: 34%;
   top: 5%;
   transform-origin: bottom center;
-  
+
   &:before {
     background: husky-color('primary');
     border-top-left-radius: 50% 40%;
@@ -373,7 +333,7 @@ body {
   height: 62%;
   top: 15%;
   left: 2%;
-  
+
   &:before {
     z-index: 1;
     width: 94%;
@@ -398,7 +358,7 @@ body {
   border-top-left-radius: 55% 50%;
   border-top-right-radius: 45% 50%;
   z-index: 2;
-  
+
   &:before {
     animation: husky-left-eye $duration none infinite;
     height: 15%;
@@ -409,7 +369,7 @@ body {
     left: 45%;
     transform-origin: center center;
   }
-  
+
   + .husky-eye {
     z-index: 1;
     right: initial;
@@ -427,7 +387,7 @@ body {
   height: 20%;
   top: 29%;
   left: 42%;
-  
+
   &:after {
     background: husky-color('primary');
     height: 100%;
@@ -437,7 +397,7 @@ body {
     border-bottom-right-radius: 55% 80%;
     border-bottom-left-radius: 50% 80%;
   }
-  
+
   &:before {
     height: 100%;
     width: 200%;
@@ -461,7 +421,7 @@ body {
   transform-origin: 80% center;
   overflow: hidden;
   background: husky-color('primary');
-  
+
   &:before {
     width: 70%;
     height: 55%;
@@ -470,11 +430,9 @@ body {
     top: 20%;
     left: 15%;
     transform-origin: top left;
-    transform:
-      skewX(30deg)
-      rotate(-5deg);
+    transform: skewX(30deg) rotate(-5deg);
   }
-  
+
   &:after {
     width: 70%;
     height: 100%;
@@ -484,7 +442,7 @@ body {
     transform-origin: top left;
     transform: rotate(-5deg);
   }
-  
+
   + .husky-ear {
     animation: husky-right-ear $duration both infinite;
     background-color: husky-color('dark');
@@ -492,11 +450,11 @@ body {
     top: 5%;
     z-index: -1;
     transform-origin: right center;
-    
+
     &:before {
       border-color: husky-color('dark');
     }
-    
+
     &:after {
       background: husky-color('dark');
     }
@@ -512,7 +470,7 @@ body {
   bottom: -5%;
   left: 28%;
   overflow: hidden;
-  
+
   &:before, &:after {
     animation: husky-mouth-cover-left $duration none infinite;
     width: 28%;
@@ -523,7 +481,7 @@ body {
     z-index: 3;
     transform-origin: right top;
   }
-  
+
   &:after {
     animation: husky-mouth-cover-right $duration none infinite;
     left: initial;
@@ -536,7 +494,7 @@ body {
   z-index: 2;
   height: 35%;
   width: 100%;
-  
+
   &:before, &:after {
     background: husky-color('white');
     width: calc(50% + 1.5px);
@@ -551,17 +509,17 @@ body {
     border-top-color: transparent;
   }
 
-  
+
   &:after {
     transform: rotateY(180deg);
-    left: initial;    
+    left: initial;
     right: 0;
   }
 }
 
 // Firefox hack
 @supports (-moz-appearance:none) and (display:contents) {
-  .husky-lips {  
+  .husky-lips {
     &:before, &:after {
       width: calc(50% + 4px);
     }
@@ -594,18 +552,16 @@ body {
   height: 55%;
   width: 100%;
   bottom: 0;
-  
+
   &:before {
     background: husky-color('primary');
     height: 100%;
     width: 50%;
-    transform:
-      translateX(-20%)
-      skewX(-30deg);
+    transform: translateX(-20%) skewX(-30deg);
     transform-origin: left bottom;
     border-radius: 0 30% 0 60%;
   }
-  
+
   &:after {
     background: husky-color('primary');
     height: 100%;
@@ -624,8 +580,8 @@ body {
   height: 30%;
   top: 44%;
   left: 37%;
-  
-  &:before {    
+
+  &:before {
     background: husky-color('white');
     height: 40%;
     width: 100%;
@@ -633,7 +589,7 @@ body {
     border-top-right-radius: 20% 100%;
     border-bottom-left-radius: 10% 50%;
   }
-  
+
   &:after {
     background: husky-color('white');
     top: 25%;
@@ -654,7 +610,7 @@ body {
   transform-origin: bottom right;
   left: 10%;
   top: 21%;
-  transform: rotate(25deg) skewX(-30deg) ;
+  transform: rotate(25deg) skewX(-30deg);
 }
 
 .husky-legs {
@@ -676,22 +632,20 @@ body {
   height: 120%;
   bottom: 0;
   right: -12%;
-  
+
   &:before {
     width: 4%;
     height: 6%;
     background: transparent;
     bottom: 0;
     left: 47%;
-    box-shadow:
-      -1.3vmin 0 0 husky-color('light'),
-      -2.8vmin 0 0 husky-color('light'),
-      1.3vmin 0 0 husky-color('primary'),
-      2.8vmin 0 0 husky-color('primary')
-      ;
+    box-shadow: -1.3vmin 0 0 husky-color('light'),
+    -2.8vmin 0 0 husky-color('light'),
+    1.3vmin 0 0 husky-color('primary'),
+    2.8vmin 0 0 husky-color('primary');
     z-index: 2;
   }
-  
+
   > .husky-leg {
     width: 51%;
     height: 100%;
@@ -699,7 +653,7 @@ body {
     bottom: -1px;
     right: 50%;
     overflow: hidden;
-    
+
     &:before {
       background: husky-color('lighter');
       height: 100%;
@@ -707,11 +661,11 @@ body {
       transform: skewY(-30deg) skewX(10deg);
       transform-origin: top right;
     }
-    
+
     + .husky-leg {
       right: 0;
       transform: rotateY(180deg);
-      
+
       &:before {
         background: husky-color('light');
       }
@@ -726,18 +680,17 @@ body {
   height: 25%;
   border-top-left-radius: 35% 100%;
   border-top-right-radius: 40% 100%;
-  bottom: 0%;
+  bottom: 0;
   right: 45%;
-  
+
   &:before {
     width: 6%;
     height: 20%;
     background: transparent;
     bottom: 0;
     left: 70%;
-    box-shadow:
-      -0.8vmin 0 0 husky-color('primary'),
-      0.8vmin 0 0 husky-color('primary');
+    box-shadow: -0.8vmin 0 0 husky-color('primary'),
+    0.8vmin 0 0 husky-color('primary');
   }
 }
 
@@ -749,7 +702,7 @@ body {
   right: 72%;
   background: husky-color('dark');
   z-index: 0;
-  
+
   > .husky-tail {
     animation: husky-tail $duration none infinite;
     height: 100%;
@@ -758,102 +711,15 @@ body {
     transform-origin: center right;
     border-top-left-radius: 50% 50%;
     border-bottom-left-radius: 50% 50%;
-    transform: rotate(26deg);
-    transform: rotate(0deg);
   }
-  
+
   .husky > & {
     border-top-left-radius: 10% 50%;
     border-bottom-left-radius: 10% 50%;
   }
-  
+
   .husky > & > & {
     right: 88%;
-  }
-}
-
-.snow {
-  $snow-color: rgba(white, 0.8);
-  $num-snowflakes: 40;
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 5;
-  pointer-events: none;
-
-  &:before, &:after {
-    content: '';
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;  
-    z-index: 10;
-    width: 1vmin;
-    height: 1vmin;
-    background-color: $snow-color;
-    border-radius: 50%;
-    animation: snow 5s linear infinite;
-
-    $snowflakes: ();
-
-    @for $i from 1 through $num-snowflakes {
-      $top: random() * 100vh * 3;
-      $left: random() * 100vw;
-
-      $snowflakes: append($snowflakes,
-        #{$left $top $snow-color},
-        comma
-      );
-
-      $snowflakes: append($snowflakes,
-        #{$left $top + 100vh * 3 $snow-color},
-        comma
-      );
-    }
-
-    box-shadow: $snowflakes;
-  }
-
-  &:after {
-    width: 1.1vmin;
-    height: 8px;
-    animation-duration: 6s;
-  }
-}
-
-@keyframes snow {
-  from {
-    transform: rotate(10deg)
-      translateY(-300vh);
-  }
-  to {
-    transform: rotate(10deg)
-      translateY(0);
-  }
-}
-
-@keyframes squigglevision {
-  0% {
-    -webkit-filter: url('#squiggly-0');
-    filter: url('#squiggly-0');
-  }
-  25% {
-    -webkit-filter: url('#squiggly-1');
-    filter: url('#squiggly-1');
-  }
-  50% {
-    -webkit-filter: url('#squiggly-2');
-    filter: url('#squiggly-2');
-  }
-  75% {
-    -webkit-filter: url('#squiggly-3');
-    filter: url('#squiggly-3');
-  }
-  100% {
-    -webkit-filter: url('#squiggly-4');
-    filter: url('#squiggly-4');
   }
 }
 
