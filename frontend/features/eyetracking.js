@@ -43,7 +43,7 @@ let video = null;
 let landmarker = null;
 let lastSeenTs = 0;
 let eyesClosedSince = null;
-// let becameLookingAt = null;
+let becameLookingAt = null;
 let ema = { x: null, y: null }; // for future gaze use
 // Active-window tracker is implemented in features/activeWindowTracker.js
 
