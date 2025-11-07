@@ -15,4 +15,5 @@ public class MongoContext
   }
 
   public IMongoCollection<User> Users => _database.GetCollection<User>("Users");
+  public IMongoCollection<Session> Sessions => _database.GetCollection<Session>("Sessions");
 }

@@ -12,4 +12,6 @@ public class User
 
     public string Email { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
+    public string[] WhiteList { get; set; } = [];
+    public string[] BlackList { get; set; } = [];
 }
