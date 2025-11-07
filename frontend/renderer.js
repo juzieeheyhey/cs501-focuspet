@@ -1,12 +1,114 @@
 import { initEyeTrackerUI } from './features/eyetracking.js';
 
+// Backend base URL for auth calls. Update if your backend runs on a different port.
+const BACKEND_BASE = window.BACKEND_BASE || 'http://localhost:5000';
+
+function showView(name) {
+    const auth = document.getElementById('authView');
+    const app = document.getElementById('appView');
+    if (name === 'auth') {
+        if (auth) auth.style.display = 'flex';
+        if (app) app.style.display = 'none';
+    } else {
+        if (auth) auth.style.display = 'none';
+        if (app) app.style.display = 'block';
+    }
+}
+
+async function attemptLogin(email, password) {
+    const url = `${BACKEND_BASE}/api/auth/login`;
+    try {
+        const resp = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ Email: email, PasswordHash: password }),
+        });
+        if (!resp.ok) {
+            const txt = await resp.text().catch(() => resp.statusText || 'Login failed');
+            throw new Error(txt || 'Login failed');
+        }
+        const body = await resp.json();
+        if (body?.token) {
+            localStorage.setItem('authToken', body.token);
+            return { success: true };
+        }
+        throw new Error('Invalid response from server');
+    } catch (err) {
+        return { success: false, error: err?.message || String(err) };
+    }
+}
+
+function showAuthMessage(msg) {
+    const el = document.getElementById('loginMessage');
+    if (el) {
+        el.textContent = msg || '';
+        el.style.display = msg ? 'block' : 'none';
+    }
+}
+
+function logout() {
+    localStorage.removeItem('authToken');
+    // teardown any running tracker UI (if needed)
+    try { window.stopSession?.(); } catch {}
+    showView('auth');
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) logoutBtn.style.display = 'none';
+}
+
 window.addEventListener('DOMContentLoaded', () => {
-    initEyeTrackerUI();
+    const loginBtn = document.getElementById('loginBtn');
+    const emailInput = document.getElementById('emailInput');
+    const passwordInput = document.getElementById('passwordInput');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    const token = localStorage.getItem('authToken');
+    if (token) {
+        showView('app');
+        // show logout control
+        if (logoutBtn) logoutBtn.style.display = 'inline-block';
+        initEyeTrackerUI();
+    } else {
+        showView('auth');
+    }
+
+    if (loginBtn) {
+        loginBtn.addEventListener('click', async () => {
+            const email = emailInput?.value?.trim() || '';
+            const password = passwordInput?.value || '';
+            if (!email || !password) {
+                showAuthMessage('Please enter email and password');
+                return;
+            }
+            loginBtn.disabled = true;
+            showAuthMessage('');
+            const res = await attemptLogin(email, password);
+            loginBtn.disabled = false;
+            if (res.success) {
+                showView('app');
+                if (logoutBtn) logoutBtn.style.display = 'inline-block';
+                initEyeTrackerUI();
+            } else {
+                showAuthMessage(res.error || 'Login failed');
+            }
+        });
+    }
+
+    if (passwordInput) {
+        passwordInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                loginBtn?.click();
+            }
+        });
+    }
+
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => logout());
+    }
 
     // Listen for active window updates from main (exposed via preload)
     if (window.electronAPI?.onActiveWindow) {
         window.electronAPI.onActiveWindow((info) => {
-            // Example: log and optionally show in UI if an element exists
             console.log('Active window:', info);
             const el = document.getElementById('activeWindowTitle');
             if (el) el.textContent = info?.title || '—';
