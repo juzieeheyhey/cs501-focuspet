@@ -1,0 +1,17 @@
+bin/
+obj/
+publish/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+.idea/
+*.sln.iml
+
+appsettings.Development.json
+appsettings.Local.json
+
+.DS_Store
+.vscode/
