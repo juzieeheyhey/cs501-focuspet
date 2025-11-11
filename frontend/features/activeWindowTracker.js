@@ -4,6 +4,7 @@
 let appTimes = {};
 let lastActiveApp = null;
 let lastActiveTs = 0;
+let startTs = null;
 let running = false;
 
 export function initActiveWindowTracker() {
@@ -31,6 +32,7 @@ export function startSessionTracking() {
     appTimes = {};
     lastActiveApp = null;
     lastActiveTs = Date.now();
+    startTs = Date.now();
     running = true;
     try { window.electronAPI?.requestStartPolling?.(); } catch { }
 }
@@ -38,6 +40,7 @@ export function startSessionTracking() {
 export function stopSessionTracking() {
     running = false;
     const endTs = Date.now();
+    const durationMinutes = Math.round((endTs - startTs) / 60000);
     if (lastActiveApp != null) {
         const elapsedApp = endTs - lastActiveTs;
         appTimes[lastActiveApp] = (appTimes[lastActiveApp] || 0) + elapsedApp;

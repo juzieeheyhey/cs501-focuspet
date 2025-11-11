@@ -59,7 +59,7 @@ public class AuthController : ControllerBase
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(
-            claims: new[] { new Claim(ClaimTypes.Name, user.Email) },
+            claims: new[] { new Claim(ClaimTypes.Name, user.Id) },
             expires: DateTime.Now.AddDays(7),
             signingCredentials: creds
         );
