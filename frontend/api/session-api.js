@@ -32,4 +32,30 @@ export async function postSession(sessionData) {
 	return await resp.json();
 }
 
-export default { postSession };
+/**
+ * GET a single session by ID.
+ * @param {string} sessionId - The ID of the session to retrieve.
+ * @returns {Promise<Object>} - The session object from the backend.
+ * @throws {Error} - If the request fails.
+ */
+export async function getSession(sessionId) {
+	if (!sessionId) throw new Error('sessionId is required');
+
+	const BASE = window.BACKEND_BASE || 'http://localhost:5185';
+	const url = `${BASE.replace(/\/$/, '')}/api/session/${sessionId}`;
+
+	const token = localStorage.getItem('authToken');
+	const headers = { 'Content-Type': 'application/json' };
+	if (token) headers['Authorization'] = `Bearer ${token}`;
+
+	const resp = await fetch(url, { headers });
+
+	if (!resp.ok) {
+		const txt = await resp.text().catch(() => resp.statusText || 'Server error');
+		throw new Error(`Failed to get session ${sessionId}: ${resp.status} ${txt}`);
+	}
+
+	return await resp.json();
+}
+
+export default { postSession, getSession };

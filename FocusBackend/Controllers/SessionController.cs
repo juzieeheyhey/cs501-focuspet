@@ -78,7 +78,5 @@ namespace FocusBackend.Controllers
     }
   }
 
-  // NOTE:
-  // - Ensure you have an ApplicationDbContext with DbSet<Session> Sessions.
-  // - Ensure you have a Session entity with properties used above (Id, Title, StartAt, DurationMinutes, UserId).
+  
 }
