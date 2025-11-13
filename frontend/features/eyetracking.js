@@ -3,6 +3,7 @@ import { startCamera, stopCamera } from './camera.js';
 import { loadLandmarker, detectForVideo, closeLandmarker } from './landmarker.js';
 import { initActiveWindowTracker, startSessionTracking, stopSessionTracking, resetSessionTracking } from './activeWindowTracker.js';
 import { mergeTotals, saveLastSession } from './storage.js';
+import { postSession, getSession } from '../api/session-api.js';
 
 
 // ====== UI elements (match your HTML IDs) ======
@@ -259,7 +260,7 @@ async function startSession() {
     stopBtn.disabled = false;
 }
 
-function stopSession() {
+async function stopSession() {
     if (!sessionActive) return;
     sessionActive = false;
 
@@ -297,6 +298,29 @@ function stopSession() {
     stopBtn.disabled = true;
 
     setState('idle');
+
+    try {
+        const durationMinutes = (elapsed) / 60000;
+        const focusScore = lookingTimeTotal / (lookingTimeTotal + awayTimeTotal);
+
+        const sessionData = {
+            userId: localStorage.getItem('userId'),
+            startTime: new Date(stateStartTime).toISOString(),
+            endTime: new Date(now).toISOString(),
+            durationMinutes: parseInt(durationMinutes),
+            activity: { "testing": 1000 },
+            focusScore: parseInt(focusScore),
+        };
+
+        console.log("Posting session data:", sessionData);
+
+        const created = await postSession(sessionData);
+
+        const sessionId = created.id || created._id;
+        console.log("Created session ID:", sessionId);
+    } catch (err) {
+        console.error("Failed to post session:", err);
+    }
 }
 
 export function initEyeTrackerUI() {
