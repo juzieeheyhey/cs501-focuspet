@@ -32,7 +32,7 @@ namespace FocusBackend.Controllers
       public DateTime StartTime { get; set; }
 
       public DateTime EndTime { get; set; }
-      public int DurationMinutes { get; set; }
+      public int DurationSession { get; set; }
       public string UserId { get; set; } = string.Empty;
 
       public Dictionary<string, int> Activity { get; set; } = new Dictionary<string, int>();
@@ -50,7 +50,7 @@ namespace FocusBackend.Controllers
         UserId = dto.UserId,
         StartTime = dto.StartTime,
         EndTime = dto.EndTime,
-        DurationMinutes = dto.DurationMinutes,
+        DurationSession = dto.DurationSession,
         Activity = dto.Activity,
         FocusScore = dto.FocusScore,
       };
@@ -78,7 +78,5 @@ namespace FocusBackend.Controllers
     }
   }
 
-  // NOTE:
-  // - Ensure you have an ApplicationDbContext with DbSet<Session> Sessions.
-  // - Ensure you have a Session entity with properties used above (Id, Title, StartAt, DurationMinutes, UserId).
+  
 }

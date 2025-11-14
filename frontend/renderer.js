@@ -15,6 +15,16 @@ function showView(name) {
     }
 }
 
+function parseJwt(token) {
+    try {
+        const base64 = token.split('.')[1];
+        const json = atob(base64);
+        return JSON.parse(json);
+    } catch {
+        return null;
+    }
+}
+
 async function attemptLogin(email, password) {
     const url = `${BACKEND_BASE}/api/auth/login`;
     try {
@@ -30,6 +40,12 @@ async function attemptLogin(email, password) {
         const body = await resp.json();
         if (body?.token) {
             localStorage.setItem('authToken', body.token);
+            const decoded = parseJwt(body.token);
+            if (decoded) {
+                localStorage.setItem('userId', decoded.userId); // store the userId in local storage for posting sessions & future use
+            } else {
+                console.warn('JWT decoded but no userId claim:', decoded);
+            }
             return { success: true };
         }
         throw new Error('Invalid response from server');
@@ -49,7 +65,7 @@ function showAuthMessage(msg) {
 function logout() {
     localStorage.removeItem('authToken');
     // teardown any running tracker UI (if needed)
-    try { window.stopSession?.(); } catch {}
+    try { window.stopSession?.(); } catch { }
     showView('auth');
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) logoutBtn.style.display = 'none';
@@ -86,7 +102,7 @@ window.addEventListener('DOMContentLoaded', () => {
             if (res.success) {
                 showView('app');
                 if (logoutBtn) logoutBtn.style.display = 'inline-block';
-                initEyeTrackerUI();
+                initEyeTrackerUI(); // actually starts the main app logic
             } else {
                 showAuthMessage(res.error || 'Login failed');
             }
@@ -110,8 +126,8 @@ window.addEventListener('DOMContentLoaded', () => {
     if (window.electronAPI?.onActiveWindow) {
         window.electronAPI.onActiveWindow((info) => {
             console.log('Active window:', info);
-            const el = document.getElementById('activeWindowTitle');
-            if (el) el.textContent = info?.title || '—';
+            // const el = document.getElementById('activeWindowTitle');
+            // if (el) el.textContent = info?.title || '—';
         });
     }
 });

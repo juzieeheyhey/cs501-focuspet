@@ -4,6 +4,7 @@ import activeWin from 'active-win';
 
 let mainWindow;
 let activeWinInterval = null;
+let lastSessionWindow = null;
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -88,7 +89,36 @@ function createWindow() {
         activeWinInterval = null;
     }
 
+    function openLastSessionWindow(payload) {
+        if (lastSessionWindow && !lastSessionWindow.isDestroyed()) {
+            lastSessionWindow.webContents.send('last-session-window', payload);
+            lastSessionWindow.focus();
+            return;
+        }
+        lastSessionWindow = new BrowserWindow({
+            width: 420,
+            height: 520,
+            parent: mainWindow,
+            modal: true,
+            resizable: false,
+            minimizable: false,
+            maximizable: false,
+            webPreferences: {
+                preload: path.join(process.cwd(), 'preload.js'),
+                contextIsolation: true,
+                nodeIntegration: false,
+            },
+        });
+        lastSessionWindow.on('closed', () => {
+            lastSessionWindow = null;
+        });
+        lastSessionWindow.loadFile(path.join(process.cwd(), 'last-session.html'));
+        lastSessionWindow.webContents.once('did-finish-load', () => {
+            lastSessionWindow.webContents.send('last-session-window', payload);
+        });
+    }
     // IPC controls (optional): allow renderer to start/stop or request one-shot
+
     ipcMain.on('active-window-start', () => startActiveWindowPolling());
     ipcMain.on('active-window-stop', () => stopActiveWindowPolling());
     ipcMain.handle('get-active-window', async () => {
@@ -96,8 +126,9 @@ function createWindow() {
             return await activeWin();
         } catch { return null; }
     });
-
+    ipcMain.on('open-last-session-window', (event, payload) => openLastSessionWindow(payload));
 }
+
 
 app.whenReady().then(createWindow);
 
