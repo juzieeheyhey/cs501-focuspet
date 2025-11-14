@@ -1,0 +1,119 @@
+/* Root container */
+#homeView {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f5f5f5;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+}
+
+/* Mint card in the middle */
+.home-panel {
+    width: 960px;
+    max-width: 100%;
+    background: #bfbfe0dd; /* just kidding this was wrong :P */
+    background: #bfeadd;
+    border-radius: 8px;
+    padding: 48px 72px;
+    box-sizing: border-box;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header */
+.home-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 48px;
+    font-size: 13px;
+}
+
+.home-brand {
+    font-weight: 700;
+    color: #111827;
+}
+
+.home-nav {
+    display: flex;
+    gap: 24px;
+}
+
+.nav-link {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 12px;
+    color: #111827;
+    cursor: pointer;
+}
+
+/* Main layout */
+.home-main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 40px;
+}
+
+/* Left side */
+.hero-copy {
+    max-width: 360px;
+}
+
+.hero-title {
+    margin: 0 0 16px 0;
+    font-size: 32px;
+    line-height: 1.2;
+    color: #111827;
+}
+
+.hero-subtitle {
+    margin: 0 0 24px 0;
+    font-size: 14px;
+    color: #4b5563;
+}
+
+.hero-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 220px;
+}
+
+/* Pill buttons */
+.hero-btn {
+    width: 100%;
+    padding: 10px 0;
+    border-radius: 999px;
+    border: none;
+    font-weight: 600;
+    font-size: 14px;
+    color: #ffffff;
+    cursor: pointer;
+}
+
+.hero-btn--primary {
+    background: #21c58f;
+}
+
+.hero-btn--secondary {
+    background: #1bd28d;
+}
+
+/* Right side */
+.hero-visual {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hero-img {
+    width: 260px;
+    height: auto;
+    display: block;
+}
