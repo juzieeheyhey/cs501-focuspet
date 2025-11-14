@@ -7,14 +7,15 @@ import { postSession, getSession } from '../api/session-api.js';
 
 
 // ====== UI elements (match your HTML IDs) ======
-const startBtn = document.getElementById("startBtn");
-const stopBtn = document.getElementById("stopBtn");
-const stateIcon = document.getElementById("stateIcon");
-const stateText = document.getElementById("stateText");
-const timerEl = document.getElementById("timer");
-const lookingTimeEl = document.getElementById("lookingTime");
-const awayTimeEl = document.getElementById("awayTime");
-const focusScoreEl = document.getElementById("focusScore");
+// NOTE: views are injected dynamically. Resolve DOM elements when the view is mounted
+let startBtn = null;
+let stopBtn = null;
+let stateIcon = null;
+let stateText = null;
+let timerEl = null;
+let lookingTimeEl = null;
+let awayTimeEl = null;
+let focusScoreEl = null;
 
 // ====== State machine thresholds ======
 const ABSENT_MS = 800; // no landmarks for this long → AWAY
@@ -327,12 +328,23 @@ async function stopSession() {
 }
 
 export function initEyeTrackerUI() {
-    startBtn.addEventListener('click', startSession);
-    stopBtn.addEventListener('click', stopSession);
+    // Resolve DOM elements for the currently-inserted view
+    startBtn = document.getElementById("startBtn");
+    stopBtn = document.getElementById("stopBtn");
+    stateIcon = document.getElementById("stateIcon");
+    stateText = document.getElementById("stateText");
+    timerEl = document.getElementById("timer");
+    lookingTimeEl = document.getElementById("lookingTime");
+    awayTimeEl = document.getElementById("awayTime");
+    focusScoreEl = document.getElementById("focusScore");
+
+    if (startBtn) startBtn.addEventListener('click', startSession);
+    if (stopBtn) stopBtn.addEventListener('click', stopSession);
+
     // Initialize active-window tracker (it will subscribe to preload events)
     try { initActiveWindowTracker(); } catch { }
     // Render app totals panel if present
-    // try { renderAppTotals(); } catch { }
+    try { renderAppTotals(); } catch { }
     // wire up refresh/clear buttons if present
     try {
         const refreshBtn = document.getElementById('refreshAppTotals');
@@ -341,18 +353,22 @@ export function initEyeTrackerUI() {
         if (clearBtn) clearBtn.addEventListener('click', () => {
             localStorage.removeItem('appTotals');
             localStorage.removeItem('lastSessionAppTimes');
-            // renderAppTotals();
+            renderAppTotals();
         });
     } catch { }
-    const closeLastSessionBtn = document.getElementById('lastSessionModelCloseBtn');
-    if (closeLastSessionBtn) closeLastSessionBtn.addEventListener('click', closeLastSessionModel);
 
-    const lastSessionModal = document.getElementById('lastSessionModel');
-    if (lastSessionModal) lastSessionModal.addEventListener('click', (e) => {
-        if (e.target === lastSessionModal || e.target.classList.contains('last-session-backdrop')) {
-            closeLastSessionModel();
-        }
-    });
+    // Wire up last-session modal controls
+    try {
+        const closeLastSessionBtn = document.getElementById('lastSessionModelCloseBtn');
+        if (closeLastSessionBtn) closeLastSessionBtn.addEventListener('click', closeLastSessionModel);
+
+        const lastSessionModal = document.getElementById('lastSessionModel');
+        if (lastSessionModal) lastSessionModal.addEventListener('click', (e) => {
+            if (e.target === lastSessionModal || e.target.classList.contains('last-session-backdrop')) {
+                closeLastSessionModel();
+            }
+        });
+    } catch { }
 }
 
 // Renders app totals into the UI element `#appTotalsList` if present

@@ -3,15 +3,96 @@ import { initEyeTrackerUI } from './features/eyetracking.js';
 // Backend base URL for auth calls. Update if your backend runs on a different port.
 const BACKEND_BASE = window.BACKEND_BASE || 'http://localhost:5000';
 
-function showView(name) {
-    const auth = document.getElementById('authView');
-    const app = document.getElementById('appView');
+// Load and render small HTML view fragments from ./views/{name}.html into #root
+const viewCache = new Map();
+async function showView(name) {
+    const root = document.getElementById('root');
+    if (!root) return;
+
+    // load (cached)
+    if (!viewCache.has(name)) {
+        try {
+            const resp = await fetch(`./views/${name}.html`);
+            if (!resp.ok) throw new Error(`Failed to load view: ${name}`);
+            const txt = await resp.text();
+            viewCache.set(name, txt);
+        } catch (err) {
+            console.error(err);
+            root.innerHTML = `<div style="padding:20px;color:#900">Error loading view: ${name}</div>`;
+            return;
+        }
+    }
+
+    root.innerHTML = viewCache.get(name);
+
+    // wire up view-specific handlers after injection
+    await attachViewHandlers(name);
+}
+
+async function attachViewHandlers(name) {
     if (name === 'auth') {
-        if (auth) auth.style.display = 'flex';
-        if (app) app.style.display = 'none';
-    } else {
-        if (auth) auth.style.display = 'none';
-        if (app) app.style.display = 'block';
+        const loginBtn = document.getElementById('loginBtn');
+        const emailInput = document.getElementById('emailInput');
+        const passwordInput = document.getElementById('passwordInput');
+
+        if (loginBtn) {
+            loginBtn.addEventListener('click', async () => {
+                const email = emailInput?.value?.trim() || '';
+                const password = passwordInput?.value || '';
+                if (!email || !password) {
+                    showAuthMessage('Please enter email and password');
+                    return;
+                }
+                loginBtn.disabled = true;
+                showAuthMessage('');
+                const res = await attemptLogin(email, password);
+                loginBtn.disabled = false;
+                if (res.success) {
+                    await showView('app');
+                } else {
+                    showAuthMessage(res.error || 'Login failed');
+                }
+            });
+        }
+
+        if (passwordInput) {
+            passwordInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    loginBtn?.click();
+                }
+            });
+        }
+    }
+
+    if (name === 'app') {
+        const logoutBtn = document.getElementById('logoutBtn');
+        const token = localStorage.getItem('authToken');
+        if (token && logoutBtn) logoutBtn.style.display = 'inline-block';
+
+        if (logoutBtn) logoutBtn.addEventListener('click', () => logout());
+
+        // start app logic
+        try { initEyeTrackerUI(); } catch (e) { console.error('initEyeTrackerUI failed', e); }
+
+        // Ensure modal HTML is present (modal is stored separately in views/modal.html)
+        try {
+            if (!document.getElementById('lastSessionModel')) {
+                if (!viewCache.has('modal')) {
+                    const resp = await fetch('./views/modal.html');
+                    if (resp.ok) viewCache.set('modal', await resp.text());
+                }
+                const modalHtml = viewCache.get('modal');
+                if (modalHtml) {
+                    const wrapper = document.createElement('div');
+                    wrapper.innerHTML = modalHtml;
+                    // append to body so it overlays the app view
+                    document.body.appendChild(wrapper);
+                    // re-run init to wire modal controls which were not present earlier
+                    try { initEyeTrackerUI(); } catch (e) { /* ignore */ }
+                }
+            }
+        } catch (err) { console.warn('Failed to load modal view', err); }
     }
 }
 
