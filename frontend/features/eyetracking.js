@@ -308,7 +308,7 @@ async function stopSession() {
             userId: localStorage.getItem('userId'),
             startTime: new Date(stateStartTime).toISOString(),
             endTime: new Date(now).toISOString(),
-            durationMinutes: lookingTimeTotal, // currently in ms
+            durationSession: lookingTimeTotal, // currently in ms
             activity: totals,
             focusScore: Math.round(focusScore * 100),
         };
@@ -403,10 +403,10 @@ function openLastSessionModel(session, appTotals = {}) {
 
     // approximate focus minutes from score
     const focusScore = session.focusScore ?? 0;
-    const focusMins = session.durationMinutes;
+    const focusTime = session.durationSession ?? 0;
 
     if (totalTimeEl) totalTimeEl.textContent = formatMsToHMS(totalMins);
-    if (totalFocusTimeEl) totalFocusTimeEl.textContent = formatMsToHMS(focusMins);
+    if (totalFocusTimeEl) totalFocusTimeEl.textContent = formatMsToHMS(focusTime);
     if (focusScoreEl) focusScoreEl.textContent = focusScore;
 
     if (activityListEl) {
