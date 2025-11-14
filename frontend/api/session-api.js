@@ -2,7 +2,7 @@
 /**
  * POST a session object to the backend.
  * @param {Object} sessionData - The session payload matching the backend CreateSessionDto.
- *   Example: { userId, startTime, endTime, durationMinutes, activity, focusScore }
+ *   Example: { userId, startTime, endTime, durationSession, activity, focusScore }
  * @returns {Promise<Object>} - The created session returned by the server.
  * @throws {Error} on network or server error.
  */

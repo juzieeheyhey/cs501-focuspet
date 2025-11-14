@@ -13,7 +13,7 @@ public class Session
   public string UserId { get; set; } = string.Empty;
   public DateTime StartTime { get; set; }
   public DateTime EndTime { get; set; }
-  public int DurationMinutes { get; set; }
+  public int DurationSession { get; set; }
   public Dictionary<string, int> Activity { get; set; } = new Dictionary<string, int>();
   public int FocusScore { get; set; }
 }
