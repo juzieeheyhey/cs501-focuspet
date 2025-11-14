@@ -102,7 +102,7 @@ window.addEventListener('DOMContentLoaded', () => {
             if (res.success) {
                 showView('app');
                 if (logoutBtn) logoutBtn.style.display = 'inline-block';
-                initEyeTrackerUI();
+                initEyeTrackerUI(); // actually starts the main app logic
             } else {
                 showAuthMessage(res.error || 'Login failed');
             }
@@ -126,8 +126,8 @@ window.addEventListener('DOMContentLoaded', () => {
     if (window.electronAPI?.onActiveWindow) {
         window.electronAPI.onActiveWindow((info) => {
             console.log('Active window:', info);
-            const el = document.getElementById('activeWindowTitle');
-            if (el) el.textContent = info?.title || '—';
+            // const el = document.getElementById('activeWindowTitle');
+            // if (el) el.textContent = info?.title || '—';
         });
     }
 });

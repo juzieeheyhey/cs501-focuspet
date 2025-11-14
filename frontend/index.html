@@ -164,78 +164,315 @@
             letter-spacing: 0.5px;
             margin-top: 5px;
         }
+
+        /* --- Last session modal container --- */
+        .last-session-modal.hidden {
+            display: none;
+        }
+
+        .last-session-modal {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+        }
+
+        /* subtle dim over the green background */
+        .last-session-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.12);
+        }
+
+        /* main white card */
+        .last-session-card {
+            position: relative;
+            z-index: 1;
+            width: 640px;
+            max-width: 90vw;
+            background: #ffffff;
+            border-radius: 32px;
+            padding: 32px 36px 28px;
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* close button (red X in top-right) */
+        .last-session-close-btn {
+            position: absolute;
+            top: 20px;
+            right: 24px;
+            width: 32px;
+            height: 32px;
+            border-radius: 999px;
+            border: 2px solid #ff6b6b;
+            background: #ffecec;
+            color: #ff4b4b;
+            font-size: 16px;
+            font-weight: 700;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .last-session-close-btn:hover {
+            background: #ffd2d2;
+        }
+
+        /* header */
+        .last-session-header {
+            text-align: center;
+        }
+
+        .last-session-header h2 {
+            margin: 0;
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+
+        .last-session-subtitle {
+            margin: 4px 0 0;
+            font-size: 14px;
+            color: #777;
+        }
+
+        /* stats row */
+        .last-session-stats {
+            display: flex;
+            gap: 16px;
+            justify-content: space-between;
+            margin-top: 8px;
+        }
+
+        .last-session-stat {
+            flex: 1;
+            background: #f6f6f8;
+            border-radius: 18px;
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        }
+
+        .last-session-stat .stat-value {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .last-session-stat .stat-label {
+            font-size: 12px;
+            color: #777;
+        }
+
+        /* bottom section: activity + cat */
+        .last-session-bottom {
+            display: flex;
+            gap: 18px;
+            align-items: flex-end;
+            margin-top: 8px;
+        }
+
+        /* activity summary column */
+        .last-session-activity {
+            flex: 1.3;
+        }
+
+        .last-session-activity h3 {
+            margin: 0 0 8px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .last-session-activity-box {
+            background: #f9f5ff;
+            border-radius: 16px;
+            padding: 12px 14px;
+            box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.02);
+        }
+
+        #lastSessionActivityList {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            font-size: 13px;
+        }
+
+        #lastSessionActivityList li {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+        }
+
+        #lastSessionActivityList li span:first-child {
+            font-weight: 500;
+        }
+
+        /* cat image on the right */
+        /*.last-session-cat {
+            flex: 0 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+        }
+
+        .last-session-cat img {
+            width: 140px;
+            height: auto;
+            display: block;
+        }*/
+        .blur {
+            filter: blur(6px);
+            transition: filter 0.25s ease;
+        }
+
+        #appView {
+            transition: filter 0.25s ease;
+        }
     </style>
 </head>
 
 <body>
     <!-- App view (shown after authentication) -->
     <div id="appView">
-    <div class="container">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-            <h1>FocusPet</h1>
-            <div>
-                <button id="logoutBtn" style="padding:8px 12px;border-radius:8px;border:none;background:#ef4444;color:white;display:none;">Sign out</button>
+        <div class="container">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <h1>FocusPet</h1>
+                <div>
+                    <button id="logoutBtn"
+                        style="padding:8px 12px;border-radius:8px;border:none;background:#ef4444;color:white;display:none;">Sign
+                        out</button>
+                </div>
             </div>
-        </div>
-        <p class="subtitle">Prototype v1.0</p>
+            <p class="subtitle">Prototype v1.0</p>
 
-        <div class="status-display">
-            <div class="state-indicator" id="stateIcon">🐈</div>
-            <div class="state-text state-idle" id="stateText">IDLE</div>
+            <div class="status-display">
+                <div class="state-indicator" id="stateIcon">🐈</div>
+                <div class="state-text state-idle" id="stateText">IDLE</div>
 
-            <div class="timer-label">Session Time</div>
-            <div class="timer" id="timer">00:00:00</div>
-        </div>
-
-        <div class="controls">
-            <button class="btn-start" id="startBtn">Start Session</button>
-            <button class="btn-stop" id="stopBtn" disabled>Stop Session</button>
-        </div>
-
-        <div class="stats">
-            <div class="stat-item">
-                <div class="stat-value" id="lookingTime">0s</div>
-                <div class="stat-label">Looking</div>
+                <div class="timer-label">Session Time</div>
+                <div class="timer" id="timer">00:00:00</div>
             </div>
-            <div class="stat-item">
-                <div class="stat-value" id="awayTime">0s</div>
-                <div class="stat-label">Away</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value" id="focusScore">0%</div>
-                <div class="stat-label">Focus Score</div>
-            </div>
-        </div>
 
-        <div class="app-totals" style="margin-top:20px;text-align:left;">
-            <h3 style="font-size:16px;margin-bottom:8px;">Application totals</h3>
-            <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
-                <button id="refreshAppTotals" style="padding:6px 10px;border-radius:6px;border:none;background:#6366f1;color:white;">Refresh</button>
-                <button id="clearAppTotals" style="padding:6px 10px;border-radius:6px;border:none;background:#ef4444;color:white;">Clear Totals</button>
+            <div class="controls">
+                <button class="btn-start" id="startBtn">Start Session</button>
+                <button class="btn-stop" id="stopBtn" disabled>Stop Session</button>
             </div>
-            <ul id="appTotalsList" style="list-style:none;padding-left:0;margin:0;color:#333;font-size:14px;min-height:32px;">
-                <li>No data yet</li>
-            </ul>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="lookingTime">0s</div>
+                    <div class="stat-label">Looking</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="awayTime">0s</div>
+                    <div class="stat-label">Away</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="focusScore">0%</div>
+                    <div class="stat-label">Focus Score</div>
+                </div>
+            </div>
+
+            <!-- <div class="app-totals" style="margin-top:20px;text-align:left;">
+                <h3 style="font-size:16px;margin-bottom:8px;">Application totals</h3>
+                <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+                    <button id="refreshAppTotals"
+                        style="padding:6px 10px;border-radius:6px;border:none;background:#6366f1;color:white;">Refresh</button>
+                    <button id="clearAppTotals"
+                        style="padding:6px 10px;border-radius:6px;border:none;background:#ef4444;color:white;">Clear
+                        Totals</button>
+                </div>
+                <ul id="appTotalsList"
+                    style="list-style:none;padding-left:0;margin:0;color:#333;font-size:14px;min-height:32px;">
+                    <li>No data yet</li>
+                </ul>
+            </div> -->
         </div>
-    </div>
     </div>
 
     <!-- Login screen (shown before main app when not authenticated) -->
     <!-- Auth view (initial page) -->
-    <div id="authView" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#BBE5D6 0%, #fff 60%);">
-        <div style="background:white;padding:30px;border-radius:12px;min-width:320px;box-shadow:0 10px 30px rgba(0,0,0,.12);">
+    <div id="authView"
+        style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#BBE5D6 0%, #fff 60%);">
+        <div
+            style="background:white;padding:30px;border-radius:12px;min-width:320px;box-shadow:0 10px 30px rgba(0,0,0,.12);">
             <h2 style="margin-bottom:6px">Sign in</h2>
             <p style="color:#666;margin-top:0;margin-bottom:12px;font-size:14px">Sign in to connect to the backend</p>
             <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">
-                <input id="emailInput" type="email" placeholder="you@example.com" style="padding:10px;border-radius:8px;border:1px solid #ddd;" />
-                <input id="passwordInput" type="password" placeholder="Password" style="padding:10px;border-radius:8px;border:1px solid #ddd;" />
+                <input id="emailInput" type="email" placeholder="you@example.com"
+                    style="padding:10px;border-radius:8px;border:1px solid #ddd;" />
+                <input id="passwordInput" type="password" placeholder="Password"
+                    style="padding:10px;border-radius:8px;border:1px solid #ddd;" />
             </div>
             <div style="display:flex;gap:8px;justify-content:flex-end;">
-                <button id="loginBtn" style="padding:8px 14px;border-radius:8px;border:none;background:#4f46e5;color:white;font-weight:600;">Sign in</button>
+                <button id="loginBtn"
+                    style="padding:8px 14px;border-radius:8px;border:none;background:#4f46e5;color:white;font-weight:600;">Sign
+                    in</button>
             </div>
             <div id="loginMessage" style="margin-top:10px;color:#c00;font-size:13px;display:none"></div>
         </div>
     </div>
+
+    <!-- Last Session Modal -->
+    <div id="lastSessionModel" class="last-session-modal hidden">
+        <div class="last-session-backdrop"></div>
+
+        <div class="last-session-card">
+            <!-- Close button (red X) -->
+            <button id="lastSessionModelCloseBtn" class="last-session-close-btn">✕</button>
+
+            <!-- Header -->
+            <div class="last-session-header">
+                <h2>Congratulations 🎉</h2>
+                <p class="last-session-subtitle">Session Completed!</p>
+            </div>
+
+            <!-- Stats row -->
+            <div class="last-session-stats">
+                <div class="last-session-stat">
+                    <div class="stat-value" id="lastSessionTotalTime">2h10m</div>
+                    <div class="stat-label">Total Time</div>
+                </div>
+                <div class="last-session-stat">
+                    <div class="stat-value" id="lastSessionTotalFocusTime">1h45m</div>
+                    <div class="stat-label">Total Focus Time</div>
+                </div>
+                <div class="last-session-stat">
+                    <div class="stat-value" id="lastSessionFocusScore">80</div>
+                    <div class="stat-label">Focus Score</div>
+                </div>
+            </div>
+
+            <!-- Activity + cat -->
+            <div class="last-session-bottom">
+                <div class="last-session-activity">
+                    <h3>Screen Activity Summary</h3>
+                    <div class="last-session-activity-box">
+                        <ul id="lastSessionActivityList">
+                            <!-- Filled by JS, example:
+              <li><span>🟢 Chrome</span><span>25m</span></li>
+              -->
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- <div class="last-session-cat"> -->
+                <!-- change src to your actual cat asset path -->
+                <!-- <img src="./assets/focuspet-cat.png" alt="FocusPet cat" />
+                </div> -->
+            </div>
+        </div>
+    </div>
+
 
     <script type="module" src="./renderer.js"></script>
 </body>

@@ -11,3 +11,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     requestStopPolling: () => ipcRenderer.send('active-window-stop'),
     invokeGetActiveWindow: () => ipcRenderer.invoke('get-active-window'),
 });
+
+contextBridge.exposeInMainWorld('lastSessionPopup', {
+    open: (payload) => ipcRenderer.send('last-session-window:openWindow', payload),
+    onLoad: (cb) => {
+        ipcRenderer.on('last-session-window:load', (_evt, data) => cb(data));
+    }
+});
