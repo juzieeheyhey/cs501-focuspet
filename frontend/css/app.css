@@ -1,0 +1,71 @@
+/* Header: was style="display:flex;justify-content:space-between;align-items:center;" */
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Logout button:
+   was style="padding:8px 12px;border-radius:8px;border:none;background:#ef4444;color:white;display:none;" */
+.btn-logout {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: none;
+    background: #ef4444;
+    color: white;
+    display: none;   /* stays hidden until JS shows it, same as before */
+}
+
+/* App totals container:
+   was style="margin-top:20px;text-align:left;" */
+.app-totals {
+    margin-top: 20px;
+    text-align: left;
+}
+
+/* Totals title h3:
+   was style="font-size:16px;margin-bottom:8px;" */
+.app-totals-title {
+    font-size: 16px;
+    margin-bottom: 8px;
+}
+
+/* Totals actions row:
+   was style="display:flex;gap:8px;align-items:center;margin-bottom:8px;" */
+.app-totals-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+/* Refresh button:
+   was style="padding:6px 10px;border-radius:6px;border:none;background:#6366f1;color:white;" */
+.btn-refresh {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: none;
+    background: #6366f1;
+    color: white;
+}
+
+/* Clear button:
+   was style="padding:6px 10px;border-radius:6px;border:none;background:#ef4444;color:white;" */
+.btn-clear {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: none;
+    background: #ef4444;
+    color: white;
+}
+
+/* Totals list:
+   was style="list-style:none;padding-left:0;margin:0;color:#333;font-size:14px;min-height:32px;" */
+.app-totals-list {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+    color: #333;
+    font-size: 14px;
+    min-height: 32px;
+}

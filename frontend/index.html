@@ -6,7 +6,7 @@
     <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin" />
     <meta http-equiv="Cross-Origin-Embedder-Policy" content="require-corp" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Focus Pet Prototype </title>
+    <title>Focus Pet Prototype</title>
     <style>
         * {
             margin: 0;
@@ -169,7 +169,7 @@
 
 <body>
     <!-- App view (shown after authentication) -->
-    <div id="appView">
+    <!-- <div id="appView">
     <div class="container">
         <div style="display:flex;justify-content:space-between;align-items:center;">
             <h1>FocusPet</h1>
@@ -218,11 +218,11 @@
             </ul>
         </div>
     </div>
-    </div>
+    </div> -->
 
     <!-- Login screen (shown before main app when not authenticated) -->
     <!-- Auth view (initial page) -->
-    <div id="authView" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#BBE5D6 0%, #fff 60%);">
+    <!-- <div id="authView" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#BBE5D6 0%, #fff 60%);">
         <div style="background:white;padding:30px;border-radius:12px;min-width:320px;box-shadow:0 10px 30px rgba(0,0,0,.12);">
             <h2 style="margin-bottom:6px">Sign in</h2>
             <p style="color:#666;margin-top:0;margin-bottom:12px;font-size:14px">Sign in to connect to the backend</p>
@@ -235,8 +235,9 @@
             </div>
             <div id="loginMessage" style="margin-top:10px;color:#c00;font-size:13px;display:none"></div>
         </div>
-    </div>
+    </div> -->
 
+    <div id="root"></div>
     <script type="module" src="./renderer.js"></script>
 </body>
 

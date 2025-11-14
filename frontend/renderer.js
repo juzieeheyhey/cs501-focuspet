@@ -115,3 +115,65 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+/////////////////////////////////////////////////////////////////////////////////
+// view loader
+
+const root = document.getElementById('root');
+
+async function loadView(name) {
+    try {
+        const resp = await fetch(`./views/${name}.html`);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        root.innerHTML = await resp.text();
+        const initFn = { auth: initAuthView, app: initAppView }[name];
+        if (initFn) initFn();
+    } catch (err) {
+        root.innerHTML = `<div style="padding:20px;color:#c00">Failed to load view "${name}": ${err.message}</div>`;
+    }
+}
+
+// auth view
+function initAuthView() {
+    const loginBtn = document.getElementById('loginBtn');
+    const email = document.getElementById('emailInput');
+    const pass = document.getElementById('passwordInput');
+    const msg = document.getElementById('loginMessage');
+
+    loginBtn.addEventListener('click', async () => {
+        if (!email.value || !pass.value) {
+        msg.style.display = 'block';
+        msg.textContent = 'Please enter email and password';
+        return;
+        }
+        // TODO: replace with real auth call
+        await loadView('app');
+    });
+}
+
+// app view
+function initAppView() {
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.style.display = 'inline-block';
+        logoutBtn.addEventListener('click', () => loadView('auth'));
+    }
+
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    if (startBtn && stopBtn) {
+        startBtn.addEventListener('click', () => {
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+        // ...start session logic...
+        });
+        stopBtn.addEventListener('click', () => {
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+        // ...stop session logic...
+        });
+    }
+}
+
+// initial load
+loadView('auth');
