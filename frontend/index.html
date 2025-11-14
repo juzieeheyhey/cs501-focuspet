@@ -6,7 +6,7 @@
     <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin" />
     <meta http-equiv="Cross-Origin-Embedder-Policy" content="require-corp" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Focus Pet Prototype</title>
+    <title>Focus Pet Prototype </title>
     <style>
         * {
             margin: 0;
@@ -342,12 +342,15 @@
 
 <body>
     <!-- App view (shown after authentication) -->
-    <!-- <div id="appView">
-    <div class="container">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-            <h1>FocusPet</h1>
-            <div>
-                <button id="logoutBtn" style="padding:8px 12px;border-radius:8px;border:none;background:#ef4444;color:white;display:none;">Sign out</button>
+    <div id="appView">
+        <div class="container">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <h1>FocusPet</h1>
+                <div>
+                    <button id="logoutBtn"
+                        style="padding:8px 12px;border-radius:8px;border:none;background:#ef4444;color:white;display:none;">Sign
+                        out</button>
+                </div>
             </div>
             <p class="subtitle">Prototype v1.0</p>
 
@@ -395,12 +398,13 @@
             </div> -->
         </div>
     </div>
-    </div> -->
 
     <!-- Login screen (shown before main app when not authenticated) -->
     <!-- Auth view (initial page) -->
-    <!-- <div id="authView" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#BBE5D6 0%, #fff 60%);">
-        <div style="background:white;padding:30px;border-radius:12px;min-width:320px;box-shadow:0 10px 30px rgba(0,0,0,.12);">
+    <div id="authView"
+        style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#BBE5D6 0%, #fff 60%);">
+        <div
+            style="background:white;padding:30px;border-radius:12px;min-width:320px;box-shadow:0 10px 30px rgba(0,0,0,.12);">
             <h2 style="margin-bottom:6px">Sign in</h2>
             <p style="color:#666;margin-top:0;margin-bottom:12px;font-size:14px">Sign in to connect to the backend</p>
             <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">
@@ -416,9 +420,8 @@
             </div>
             <div id="loginMessage" style="margin-top:10px;color:#c00;font-size:13px;display:none"></div>
         </div>
-    </div> -->
+    </div>
 
-    <div id="root"></div>
     <!-- Last Session Modal -->
     <div id="lastSessionModel" class="last-session-modal hidden">
         <div class="last-session-backdrop"></div>
