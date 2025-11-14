@@ -1,0 +1,50 @@
+<!-- Last Session Modal -->
+<div id="lastSessionModel" class="last-session-modal hidden">
+    <div class="last-session-backdrop"></div>
+
+    <div class="last-session-card">
+        <!-- Close button (red X) -->
+        <button id="lastSessionModelCloseBtn" class="last-session-close-btn">✕</button>
+
+        <!-- Header -->
+        <div class="last-session-header">
+            <h2>Congratulations 🎉</h2>
+            <p class="last-session-subtitle">Session Completed!</p>
+        </div>
+
+        <!-- Stats row -->
+        <div class="last-session-stats">
+            <div class="last-session-stat">
+                <div class="stat-value" id="lastSessionTotalTime">2h10m</div>
+                <div class="stat-label">Total Time</div>
+            </div>
+            <div class="last-session-stat">
+                <div class="stat-value" id="lastSessionTotalFocusTime">1h45m</div>
+                <div class="stat-label">Total Focus Time</div>
+            </div>
+            <div class="last-session-stat">
+                <div class="stat-value" id="lastSessionFocusScore">80</div>
+                <div class="stat-label">Focus Score</div>
+            </div>
+        </div>
+
+        <!-- Activity + cat -->
+        <div class="last-session-bottom">
+            <div class="last-session-activity">
+                <h3>Screen Activity Summary</h3>
+                <div class="last-session-activity-box">
+                    <ul id="lastSessionActivityList">
+                        <!-- Filled by JS, example:
+                        <li><span>🟢 Chrome</span><span>25m</span></li>
+                        -->
+                    </ul>
+                </div>
+            </div>
+
+            <!-- <div class="last-session-cat"> -->
+            <!-- change src to your actual cat asset path -->
+            <!-- <img src="./assets/focuspet-cat.png" alt="FocusPet cat" />
+            </div> -->
+        </div>
+    </div>
+</div>
