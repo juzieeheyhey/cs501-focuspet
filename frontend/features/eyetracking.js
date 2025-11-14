@@ -291,7 +291,7 @@ async function stopSession() {
         saveLastSession(sessionBreakdown);
         console.log('Session appTimes saved:', sessionBreakdown, 'totals merged:', totals);
         // refresh UI totals if present
-        try { renderAppTotals(); } catch { }
+        // try { renderAppTotals(); } catch { }
     } catch (e) { console.error('failed to finalize session app times', e); }
 
     startBtn.disabled = false;
@@ -300,16 +300,17 @@ async function stopSession() {
     setState('idle');
 
     try {
-        const durationMinutes = (elapsed) / 60000;
-        const focusScore = lookingTimeTotal / (lookingTimeTotal + awayTimeTotal);
+        const totals = JSON.parse(localStorage.getItem('appTotals') || '{}');
 
+        // const durationMinutes = (elapsed) / 60000;
+        const focusScore = lookingTimeTotal / (lookingTimeTotal + awayTimeTotal);
         const sessionData = {
             userId: localStorage.getItem('userId'),
             startTime: new Date(stateStartTime).toISOString(),
             endTime: new Date(now).toISOString(),
-            durationMinutes: parseInt(durationMinutes),
-            activity: { "testing": 1000 },
-            focusScore: parseInt(focusScore),
+            durationMinutes: lookingTimeTotal, // currently in ms
+            activity: totals,
+            focusScore: Math.round(focusScore * 100),
         };
 
         console.log("Posting session data:", sessionData);
@@ -318,6 +319,8 @@ async function stopSession() {
 
         const sessionId = created.id || created._id;
         console.log("Created session ID:", sessionId);
+        openLastSessionModel(created, totals);
+
     } catch (err) {
         console.error("Failed to post session:", err);
     }
@@ -329,7 +332,7 @@ export function initEyeTrackerUI() {
     // Initialize active-window tracker (it will subscribe to preload events)
     try { initActiveWindowTracker(); } catch { }
     // Render app totals panel if present
-    try { renderAppTotals(); } catch { }
+    // try { renderAppTotals(); } catch { }
     // wire up refresh/clear buttons if present
     try {
         const refreshBtn = document.getElementById('refreshAppTotals');
@@ -338,28 +341,100 @@ export function initEyeTrackerUI() {
         if (clearBtn) clearBtn.addEventListener('click', () => {
             localStorage.removeItem('appTotals');
             localStorage.removeItem('lastSessionAppTimes');
-            renderAppTotals();
+            // renderAppTotals();
         });
     } catch { }
+    const closeLastSessionBtn = document.getElementById('lastSessionModelCloseBtn');
+    if (closeLastSessionBtn) closeLastSessionBtn.addEventListener('click', closeLastSessionModel);
+
+    const lastSessionModal = document.getElementById('lastSessionModel');
+    if (lastSessionModal) lastSessionModal.addEventListener('click', (e) => {
+        if (e.target === lastSessionModal || e.target.classList.contains('last-session-backdrop')) {
+            closeLastSessionModel();
+        }
+    });
 }
 
 // Renders app totals into the UI element `#appTotalsList` if present
-export function renderAppTotals() {
-    try {
-        const el = document.getElementById('appTotalsList');
-        if (!el) return;
-        const totals = JSON.parse(localStorage.getItem('appTotals') || '{}');
-        el.innerHTML = '';
-        const entries = Object.entries(totals).sort((a, b) => b[1] - a[1]);
+// export function renderAppTotals() {
+//     try {
+//         const el = document.getElementById('appTotalsList');
+//         if (!el) return;
+//         const totals = JSON.parse(localStorage.getItem('appTotals') || '{}');
+//         el.innerHTML = '';
+//         const entries = Object.entries(totals).sort((a, b) => b[1] - a[1]);
+//         if (entries.length === 0) {
+//             el.textContent = 'No data yet';
+//             return;
+//         }
+//         for (const [app, ms] of entries) {
+//             const li = document.createElement('li');
+//             const secs = Math.round(ms / 1000);
+//             li.textContent = `${app}: ${secs}s`;
+//             el.appendChild(li);
+//         }
+//     } catch (e) { console.error('renderAppTotals failed', e); }
+// }
+
+function formatMsToHMS(ms) {
+    const s = Math.max(0, Math.floor((ms || 0) / 1000)); // total seconds
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+
+    // If you want only h/m (like before)
+    if (h > 0) return `${h}h${m}m`;
+    if (m > 0) return `${m}m`;
+    return `${sec}s`;
+}
+
+
+function openLastSessionModel(session, appTotals = {}) {
+    const modal = document.getElementById('lastSessionModel');
+    if (!modal) return;
+
+    const totalTimeEl = document.getElementById('lastSessionTotalTime');
+    const totalFocusTimeEl = document.getElementById('lastSessionTotalFocusTime');
+    const focusScoreEl = document.getElementById('lastSessionFocusScore');
+    const activityListEl = document.getElementById('lastSessionActivityList');
+
+    // total duration (from backend)
+    const totalMins = session.endTime - session.startTime ?? 0;
+
+    // approximate focus minutes from score
+    const focusScore = session.focusScore ?? 0;
+    const focusMins = session.durationMinutes;
+
+    if (totalTimeEl) totalTimeEl.textContent = formatMsToHMS(totalMins);
+    if (totalFocusTimeEl) totalFocusTimeEl.textContent = formatMsToHMS(focusMins);
+    if (focusScoreEl) focusScoreEl.textContent = focusScore;
+
+    if (activityListEl) {
+        activityListEl.innerHTML = '';
+        const entries = Object.entries(appTotals).sort((a, b) => b[1] - a[1]);
         if (entries.length === 0) {
-            el.textContent = 'No data yet';
-            return;
-        }
-        for (const [app, ms] of entries) {
             const li = document.createElement('li');
-            const secs = Math.round(ms / 1000);
-            li.textContent = `${app}: ${secs}s`;
-            el.appendChild(li);
+            li.innerHTML = '<span>No activity data</span>';
+            activityListEl.appendChild(li);
+        } else {
+            for (const [app, ms] of entries) {
+                const li = document.createElement('li');
+                const formatted = formatMsToHMS(ms);
+                li.innerHTML = `<span>${app}</span><span>${formatted}</span>`;
+                activityListEl.appendChild(li);
+            }
         }
-    } catch (e) { console.error('renderAppTotals failed', e); }
+    }
+
+    modal.classList.remove('hidden');
+    const main = document.getElementById('appView');
+    if (main) main.classList.add('blur');
+}
+
+function closeLastSessionModel() {
+    const modal = document.getElementById('lastSessionModel');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    const main = document.getElementById('appView');
+    if (main) main.classList.remove('blur');
 }
