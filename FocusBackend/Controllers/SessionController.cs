@@ -22,8 +22,8 @@ namespace FocusBackend.Controllers
 
     public SessionController(MongoContext ctx, IConfiguration config)
     {
-        _ctx = ctx;
-        _config = config;
+      _ctx = ctx;
+      _config = config;
     }
 
     // DTO for creating a session. Adjust properties to match your Session entity.
@@ -76,7 +76,21 @@ namespace FocusBackend.Controllers
       if (session == null) return NotFound();
       return Ok(session);
     }
-  }
 
+    // GET: api/session/user/{userId}
+    [HttpGet("user/{userId}")]
+    public async Task<IActionResult> GetSessionsByUser(string userId)
+    {
+      // Ensure incoming string id can be converted to a MongoDB ObjectId.
+      if (!MongoDB.Bson.ObjectId.TryParse(userId, out var objectId))
+      {
+        return BadRequest("Invalid userId format");
+      }
+
+      var filter = Builders<Session>.Filter.Eq("UserId", userId);
+      var sessions = await _ctx.Sessions.Find(filter).ToListAsync();
+      return Ok(sessions);
+    }
+  }
   
 }
