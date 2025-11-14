@@ -40,7 +40,7 @@ export function startSessionTracking() {
 export function stopSessionTracking() {
     running = false;
     const endTs = Date.now();
-    const durationMinutes = Math.round((endTs - startTs) / 60000);
+    const durationSession = Math.round((endTs - startTs));
     if (lastActiveApp != null) {
         const elapsedApp = endTs - lastActiveTs;
         appTimes[lastActiveApp] = (appTimes[lastActiveApp] || 0) + elapsedApp;

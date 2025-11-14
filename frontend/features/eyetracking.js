@@ -300,14 +300,14 @@ async function stopSession() {
     setState('idle');
 
     try {
-        const durationMinutes = (elapsed) / 60000;
+        const durationSession = (elapsed) ;
         const focusScore = lookingTimeTotal / (lookingTimeTotal + awayTimeTotal);
 
         const sessionData = {
             userId: localStorage.getItem('userId'),
             startTime: new Date(stateStartTime).toISOString(),
             endTime: new Date(now).toISOString(),
-            durationMinutes: parseInt(durationMinutes),
+            durationSession: parseInt(durationSession),
             activity: { "testing": 1000 },
             focusScore: parseInt(focusScore),
         };
