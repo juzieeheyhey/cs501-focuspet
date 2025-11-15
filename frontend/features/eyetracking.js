@@ -406,6 +406,7 @@ function formatMsToHMS(ms) {
 
 
 function openLastSessionModel(session, appTotals = {}) {
+    console.log(session)
     const modal = document.getElementById('lastSessionModel');
     if (!modal) return;
 
@@ -415,7 +416,13 @@ function openLastSessionModel(session, appTotals = {}) {
     const activityListEl = document.getElementById('lastSessionActivityList');
 
     // total duration (from backend)
-    const totalMins = session.endTime - session.startTime ?? 0;
+
+    const end = new Date(session.endTime);
+    const start = new Date(session.startTime)
+    console.log(end)
+    console.log(start)
+    const totalMins = end - start ?? 0;
+    console.log("totalMins: ", totalMins);
 
     // approximate focus minutes from score
     const focusScore = session.focusScore ?? 0;
