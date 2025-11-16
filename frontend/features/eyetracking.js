@@ -61,14 +61,14 @@ function setState(newState) {
     if (currentState === newState) return; // if the state is the same, do nothing
 
     // finalize previous state's time
-    const now = Date.now();
-    const elapsed = now - stateStartTime;
-    if (currentState === "looking") lookingTimeTotal += elapsed;
-    else if (currentState === "away") awayTimeTotal += elapsed;
+    // const now = Date.now();
+    // const elapsed = now - stateStartTime;
+    // if (currentState === "looking") lookingTimeTotal += elapsed;
+    // else if (currentState === "away") awayTimeTotal += elapsed;
 
     // update the state of the tracker and the time it started
     currentState = newState;
-    stateStartTime = now;
+    stateStartTime = Date.now();
 
     // update the UI to the new state
     const s = states[newState]; // get the state icon and text
@@ -271,6 +271,7 @@ async function stopSession() {
     if (currentState === 'looking') lookingTimeTotal += elapsed;
     else if (currentState === 'away') awayTimeTotal += elapsed;
 
+
     // stop UI timer
     clearInterval(timerInterval);
     timerInterval = null;
@@ -301,13 +302,13 @@ async function stopSession() {
     setState('idle');
 
     try {
-        const totals = JSON.parse(localStorage.getItem('appTotals') || '{}');
+        const totals = JSON.parse(localStorage.getItem('lastSessionAppTimes') || '{}');
 
         // const durationMinutes = (elapsed) / 60000;
         const focusScore = lookingTimeTotal / (lookingTimeTotal + awayTimeTotal);
         const sessionData = {
             userId: localStorage.getItem('userId'),
-            startTime: new Date(stateStartTime).toISOString(),
+            startTime: new Date(sessionStartTime).toISOString(),
             endTime: new Date(now).toISOString(),
             durationSession: lookingTimeTotal, // currently in ms
             activity: totals,
@@ -425,6 +426,7 @@ function openLastSessionModel(session, appTotals = {}) {
     console.log("totalMins: ", totalMins);
 
     // approximate focus minutes from score
+
     const focusScore = session.focusScore ?? 0;
     const focusTime = session.durationSession ?? 0;
 

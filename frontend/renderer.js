@@ -94,6 +94,7 @@ async function attachViewHandlers(name) {
             }
         } catch (err) { console.warn('Failed to load modal view', err); }
     }
+
 }
 
 function parseJwt(token) {
