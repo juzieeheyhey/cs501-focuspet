@@ -3,11 +3,57 @@ import { initEyeTrackerUI } from './features/eyetracking.js';
 // Backend base URL for auth calls. Update if your backend runs on a different port.
 const BACKEND_BASE = window.BACKEND_BASE || 'http://localhost:5000';
 
+// views that are allowed while logged out
+const PUBLIC_VIEWS = new Set(['home', 'auth', 'signup']);
+
+// update nav based on auth state
+function updateNav() {
+    const token = localStorage.getItem('authToken');
+    const loggedOut = document.querySelector('.nav-logged-out');
+    const loggedIn = document.querySelector('.nav-logged-in');
+    if (loggedOut) loggedOut.style.display = token ? 'none' : 'flex';
+    if (loggedIn) loggedIn.style.display = token ? 'flex' : 'none';
+}
+
+// handle navigation using data-view attributes
+function initNav() {
+    const nav = document.querySelector('nav');
+    if (!nav) return;
+
+    nav.addEventListener('click', (e) => {
+        const target = e.target;
+        if (!(target instanceof HTMLAnchorElement)) return;
+
+        const viewName = target.dataset.view;
+        if (!viewName) return;
+
+        e.preventDefault();
+
+        const token = localStorage.getItem('authToken');
+
+        // block protected views if not logged in
+        if (!token && !PUBLIC_VIEWS.has(viewName)) {
+            showView('home');
+            return;
+        }
+
+        showView(viewName);
+    });
+}
+
 // Load and render small HTML view fragments from ./views/{name}.html into #root
 const viewCache = new Map();
 async function showView(name) {
     const root = document.getElementById('root');
     if (!root) return;
+
+    const token = localStorage.getItem('authToken');
+
+    // guard against accessing protected views while logged out
+    if (!token && !PUBLIC_VIEWS.has(name)) {
+        console.warn('Blocked access to protected view:', name);
+        name = 'home';
+    }
 
     // load (cached)
     if (!viewCache.has(name)) {
@@ -49,6 +95,7 @@ async function attachViewHandlers(name) {
                 loginBtn.disabled = false;
                 if (res.success) {
                     await showView('app');
+                    updateNav();
                 } else {
                     showAuthMessage(res.error || 'Login failed');
                 }
@@ -150,6 +197,8 @@ function logout() {
     showView('auth');
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) logoutBtn.style.display = 'none';
+    // update nav to reflect logged-out state
+    try { updateNav(); } catch (e) { /* ignore */ }
 }
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -158,6 +207,10 @@ window.addEventListener('DOMContentLoaded', () => {
     const passwordInput = document.getElementById('passwordInput');
     const logoutBtn = document.getElementById('logoutBtn');
 
+    // initial nav state & nav handler
+    initNav();
+    updateNav();
+
     const token = localStorage.getItem('authToken');
     if (token) {
         showView('app');
@@ -165,8 +218,11 @@ window.addEventListener('DOMContentLoaded', () => {
         if (logoutBtn) logoutBtn.style.display = 'inline-block';
         initEyeTrackerUI();
     } else {
-        showView('auth');
+        showView('home');
     }
+
+    // update nav visibility based on token
+    updateNav();
 
     if (loginBtn) {
         loginBtn.addEventListener('click', async () => {
@@ -183,6 +239,7 @@ window.addEventListener('DOMContentLoaded', () => {
             if (res.success) {
                 showView('app');
                 if (logoutBtn) logoutBtn.style.display = 'inline-block';
+                updateNav();
                 initEyeTrackerUI(); // actually starts the main app logic
             } else {
                 showAuthMessage(res.error || 'Login failed');
