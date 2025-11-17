@@ -1,14 +1,13 @@
-<!-- App view (shown after authentication) -->
-<div id="appView">
+<!-- frontend/views/app.html -->
+<!-- show when logged in -->
+
+<div id="appView" class="app-view">
     <div class="container">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-            <h1>FocusPet</h1>
-            <div>
-                <button id="logoutBtn"
-                    style="padding:8px 12px;border-radius:8px;border:none;background:#ef4444;color:white;display:none;">Sign
-                    out</button>
-            </div>
+        <div class="app-header">
+            <!-- <h1 class="app-title">FocusPet</h1> -->
+            <button id="logoutBtn" class="logout-btn">Sign out</button>
         </div>
+
         <p class="subtitle">Prototype v1.0</p>
 
         <div class="status-display">
@@ -38,20 +37,5 @@
                 <div class="stat-label">Focus Score</div>
             </div>
         </div>
-
-        <!-- <div class="app-totals" style="margin-top:20px;text-align:left;">
-            <h3 style="font-size:16px;margin-bottom:8px;">Application totals</h3>
-            <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
-                <button id="refreshAppTotals"
-                    style="padding:6px 10px;border-radius:6px;border:none;background:#6366f1;color:white;">Refresh</button>
-                <button id="clearAppTotals"
-                    style="padding:6px 10px;border-radius:6px;border:none;background:#ef4444;color:white;">Clear
-                    Totals</button>
-            </div>
-            <ul id="appTotalsList"
-                style="list-style:none;padding-left:0;margin:0;color:#333;font-size:14px;min-height:32px;">
-                <li>No data yet</li>
-            </ul>
-        </div> -->
     </div>
 </div>

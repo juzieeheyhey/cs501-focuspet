@@ -6,24 +6,30 @@
     <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin" />
     <meta http-equiv="Cross-Origin-Embedder-Policy" content="require-corp" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="css/app.css">
     <title>Focus Pet Prototype </title>
-    <link rel="stylesheet" href="./css/nav.css">
-    <link rel="stylesheet" href="./css/app-view.css">
-    <link rel="stylesheet" href="./css/last-session-modal.css">
-    <link rel="stylesheet" href="./css/style.css">
 </head>
 
 <body>
-    <header class="header">
-        <div class="appName">FocusPet</div>
-        <nav id="mainNav" class="nav-bar">
-            <button class="nav-link" data-view="app">Home</button>
-            <button class="nav-link" data-view="analytics">Analytics</button>
-            <button class="nav-link" data-view="settings">Settings</button>
-        </nav>
+    <nav>
+        <h1>FocusPet</h1>
 
-    </header>
+        <!-- if logged out -->
+        <ul class="nav-logged-out">
+            <li><a href="#" data-view="home">Home</a></li>
+            <li><a href="#" data-view="auth">Log In</a></li>
+            <li><a href="#" data-view="signup">Sign Up</a></li>
+        </ul>
 
+        <!-- if logged in -->
+        <ul class="nav-logged-in" style="display:none">
+            <li><a href="#" data-view="app">Focus</a></li>
+            <li><a href="#" data-view="analytics">Analytics</a></li>
+            <li><a href="#" data-view="settings">Settings</a></li>
+        </ul>
+    </nav>
     <div id="root"></div>
 
     <script type="module" src="./renderer.js"></script>

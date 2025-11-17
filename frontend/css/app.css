@@ -1,0 +1,39 @@
+/* frontend/css/app.css */
+
+.app-view {
+    padding: 24px;
+    min-height: calc(100vh - 72px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.app-header {
+    width: 100%;
+    max-width: 700px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+/* .app-title {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0;
+} */
+
+.logout-btn {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: none;
+    background: #ef4444;
+    color: white;
+    font-weight: 600;
+    display: none;
+    cursor: pointer;
+}
+
+.logout-btn:hover {
+    opacity: 0.9;
+}
