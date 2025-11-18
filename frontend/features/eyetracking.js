@@ -61,10 +61,10 @@ function setState(newState) {
     if (currentState === newState) return; // if the state is the same, do nothing
 
     // finalize previous state's time
-    // const now = Date.now();
-    // const elapsed = now - stateStartTime;
-    // if (currentState === "looking") lookingTimeTotal += elapsed;
-    // else if (currentState === "away") awayTimeTotal += elapsed;
+    const now = Date.now();
+    const elapsed = now - stateStartTime;
+    if (currentState === "looking") lookingTimeTotal += elapsed;
+    else if (currentState === "away") awayTimeTotal += elapsed;
 
     // update the state of the tracker and the time it started
     currentState = newState;
@@ -288,6 +288,7 @@ async function stopSession() {
 
     // finalize active-window tracking for this session and persist
     try {
+
         const sessionBreakdown = stopSessionTracking();
         const totals = mergeTotals(sessionBreakdown);
         saveLastSession(sessionBreakdown);
