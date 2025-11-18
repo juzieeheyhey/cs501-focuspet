@@ -19,6 +19,7 @@ function renderSessionsAnalytics(sessions) {
     const avgFocusScoreEl = document.getElementById("avgFocusScore");
     const totalSessionsEl = document.getElementById("totalSessions");
     const currentStreakEl = document.getElementById("currentStreak");
+    const activityListEl = document.getElementById("activityList");
 
     const avgScore = getAvgFocusScore(sessions);
     const totalSessions = getTotalSessions(sessions);
@@ -31,6 +32,9 @@ function renderSessionsAnalytics(sessions) {
     const recentSessions = getRecentSessions(sessions);
     renderRecentSessionsList(recentSessionsListEl, recentSessions);
 
+    const activityList = getActivityList(sessions);
+    console.log(activityList);
+    renderActivityAnalytics(activityListEl, activityList);
 
 
 }
@@ -125,5 +129,76 @@ function renderRecentSessionsList(containerEl, recentSessions) {
         `;
 
         containerEl.appendChild(row);
+    });
+}
+
+function getActivityList(sessions) {
+    if (!sessions || sessions.length === 0) return [];
+
+    const now = Date.now();
+    const weekAgo = now - 7 * 24 * 60 * 60 * 1000; // last 7 days
+
+    // accumulate total time per app
+    const totals = new Map(); // appName -> totalMs
+
+    for (const session of sessions) {
+        if (!session || !session.startTime) continue;
+
+        const start = new Date(session.startTime).getTime();
+        if (isNaN(start) || start < weekAgo || start > now) continue; // keep only this week
+
+        const activity = session.activity || {};
+        for (const [appName, value] of Object.entries(activity)) {
+            if (typeof value !== "number" || value <= 0) continue;
+            const prev = totals.get(appName) || 0;
+            totals.set(appName, prev + value); // assume `value` is milliseconds
+        }
+    }
+
+    // turn into sorted array
+    const items = Array.from(totals.entries())
+        .map(([app, totalMs]) => ({
+            app,
+            totalMs,
+            // timeLabel: formatMsToHMS(totalMs),
+        }))
+        .sort((a, b) => b.totalMs - a.totalMs); // rank: most time first
+
+    return items;
+}
+
+function renderActivityAnalytics(containerEl, activity) {
+
+    if (!containerEl) return;
+
+
+    containerEl.innerHTML = "";
+
+    activity.forEach((item, index) => {
+        const li = document.createElement("li");
+        li.className = "activity-item";
+
+        const left = document.createElement("div");
+        left.className = "activity-left";
+
+        const badge = document.createElement("div");
+        badge.className = "rank-badge";
+        badge.textContent = index + 1;
+
+        const name = document.createElement("span");
+        name.className = "app-name";
+        name.textContent = item.app;
+
+        left.appendChild(badge);
+        left.appendChild(name);
+
+        const time = document.createElement("span");
+        time.className = "app-time";
+        time.textContent = formatMsToHMS(item.totalMs);
+
+        li.appendChild(left);
+        li.appendChild(time);
+
+        containerEl.appendChild(li);
     });
 }

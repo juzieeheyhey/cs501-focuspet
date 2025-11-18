@@ -224,17 +224,17 @@ async function trackLoop() {
 // ====== Public controls (wired to HTML onclick) ======
 
 async function startSession() {
+
     if (sessionActive) return;
     sessionActive = true;
+
     sessionStartTime = Date.now();
     // Reset per-session state counters
     lookingTimeTotal = 0;
     awayTimeTotal = 0;
     currentState = 'idle';
-    stateStartTime = sessionStartTime;
+    stateStartTime = 0;
 
-    // Start UI timer
-    timerInterval = setInterval(updateTimerUI, 250);
 
     // Reset active-window tracking for this session and request polling
     resetSessionTracking();
@@ -249,16 +249,23 @@ async function startSession() {
     // Camera + model
     video = await startCamera();
     landmarker = await loadLandmarker();
+    startBtn.disabled = true;
+    stopBtn.disabled = false;
+
+    sessionStartTime = Date.now();
+    stateStartTime = sessionStartTime;
 
     // Initial state and loop
     setState('away'); // until presence stabilizes
     lastSeenTs = 0;
     eyesClosedSince = null;
     becameLookingAt = null;
+    // Start UI timer
+    timerInterval = setInterval(updateTimerUI, 250);
+
     requestAnimationFrame(trackLoop);
 
-    startBtn.disabled = true;
-    stopBtn.disabled = false;
+
 }
 
 async function stopSession() {
