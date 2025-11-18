@@ -52,10 +52,10 @@ nav a:hover {
 }
 
 #root {
-    padding: 20px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    width: 100%;
+    height: calc(100vh - 60px);
+    padding: 0;
+    position: relative;
 }
 
 .container {

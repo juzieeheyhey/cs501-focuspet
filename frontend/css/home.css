@@ -1,0 +1,51 @@
+/* frontend/css/home.css */
+
+.home-view {
+    height: 90vh;
+    width: 100%;
+    background: #BBE5D6;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.home-container {
+    width: 90%;
+    max-width: 1100px;
+    height: 80%;
+    background: #BBE5D6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.home-left {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.home-title {
+    font-size: 48px;
+    font-weight: 800;
+    line-height: 1.2;
+    color: #111;
+}
+
+.home-btn {
+    width: 330px;
+    padding: 14px 0;
+    font-size: 18px;
+    border-radius: 25px;
+    border: none;
+    background: #71d7ac;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.home-btn:hover {
+    transform: scale(1.03);
+}
