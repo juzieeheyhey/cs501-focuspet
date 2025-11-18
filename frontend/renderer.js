@@ -96,6 +96,9 @@ async function showView(name) {
 
     // wire up view-specific handlers after injection
     await attachViewHandlers(name);
+
+    // update nav to match the current state
+    updateNav();
 }
 
 async function attachViewHandlers(name) {
@@ -139,13 +142,6 @@ async function attachViewHandlers(name) {
     if (name === 'app') {
         setNavVisible(true);
 
-
-        const logoutBtn = document.getElementById('logoutBtn');
-        const token = localStorage.getItem('authToken');
-        if (token && logoutBtn) logoutBtn.style.display = 'inline-block';
-
-        if (logoutBtn) logoutBtn.addEventListener('click', () => logout());
-
         // start app logic
         try { initEyeTrackerUI(); } catch (e) { console.error('initEyeTrackerUI failed', e); }
 
@@ -174,6 +170,15 @@ async function attachViewHandlers(name) {
             initAnalytics()
         } catch (e) {
             console.error('initAnalytics failed: ', e)
+        }
+    }
+    
+    if (name === 'settings') {
+        setNavVisible(true);
+
+        const settingsLogoutBtn = document.getElementById('settingsLogoutBtn');
+        if (settingsLogoutBtn) {
+            settingsLogoutBtn.addEventListener('click', () => logout());
         }
     }
 
@@ -226,22 +231,36 @@ function showAuthMessage(msg) {
     }
 }
 
+// function logout() {
+//     localStorage.removeItem('authToken');
+//     // teardown any running tracker UI (if needed)
+//     try { window.stopSession?.(); } catch { }
+//     showView('auth');
+//     const logoutBtn = document.getElementById('logoutBtn');
+//     if (logoutBtn) logoutBtn.style.display = 'none';
+//     // update nav to reflect logged-out state
+//     try { updateNav(); } catch (e) { /* ignore */ }
+// }
+
 function logout() {
     localStorage.removeItem('authToken');
+
     // teardown any running tracker UI (if needed)
     try { window.stopSession?.(); } catch { }
+
+    // reflect logged-out state
+    updateNav();
+    setNavVisible(false);
+
+    // send user back to auth screen
     showView('auth');
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) logoutBtn.style.display = 'none';
-    // update nav to reflect logged-out state
-    try { updateNav(); } catch (e) { /* ignore */ }
 }
 
 window.addEventListener('DOMContentLoaded', () => {
     const loginBtn = document.getElementById('loginBtn');
     const emailInput = document.getElementById('emailInput');
     const passwordInput = document.getElementById('passwordInput');
-    const logoutBtn = document.getElementById('logoutBtn');
+    // const logoutBtn = document.getElementById('logoutBtn');
 
     // initial nav state & nav handler
     initNav();
@@ -254,7 +273,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
         showView('app');
         // show logout control
-        if (logoutBtn) logoutBtn.style.display = 'inline-block';
+        // if (logoutBtn) logoutBtn.style.display = 'inline-block';
         initEyeTrackerUI();
     } else {
         showView('home');
@@ -276,8 +295,8 @@ window.addEventListener('DOMContentLoaded', () => {
             const res = await attemptLogin(email, password);
             loginBtn.disabled = false;
             if (res.success) {
-                showView('app');
-                if (logoutBtn) logoutBtn.style.display = 'inline-block';
+                await showView('app');
+                // if (logoutBtn) logoutBtn.style.display = 'inline-block';
                 updateNav();
                 initEyeTrackerUI(); // actually starts the main app logic
             } else {
@@ -295,9 +314,9 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', () => logout());
-    }
+    // if (logoutBtn) {
+    //     logoutBtn.addEventListener('click', () => logout());
+    // }
 
     // Listen for active window updates from main (exposed via preload)
     if (window.electronAPI?.onActiveWindow) {

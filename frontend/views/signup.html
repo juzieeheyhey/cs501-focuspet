@@ -1,2 +1,34 @@
 <!-- frontend/views/signup.html -->
 <!-- show when not logged in -->
+
+<div id="authView" class="auth-view">
+    <div class="auth-card">
+        <h2 class="auth-title">Sign Up</h2>
+        <p class="auth-subtitle">
+            Log in to connect to the backend
+        </p>
+
+        <div class="auth-fields">
+            <input
+                id="emailInput"
+                type="email"
+                placeholder="you@example.com"
+                class="auth-input"
+            />
+            <input
+                id="passwordInput"
+                type="password"
+                placeholder="Password"
+                class="auth-input"
+            />
+        </div>
+
+        <div class="auth-actions">
+            <button id="loginBtn" class="auth-button">
+                Sign Up
+            </button>
+        </div>
+
+        <div id="loginMessage" class="auth-message"></div>
+    </div>
+</div>

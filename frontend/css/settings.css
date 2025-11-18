@@ -1,0 +1,181 @@
+/* frontend/css/settings.css */
+
+.settings-view {
+    height: calc(100vh - 60px);
+    width: 100%;
+    background: #bbe5d6;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 24px 32px;
+    box-sizing: border-box;
+}
+
+.settings-card {
+    width: 100%;
+    max-width: 1100px;
+    border-radius: 24px;
+    padding: 24px 24px 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.settings-profile {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background: #ffffff;
+    border-radius: 16px;
+    margin-bottom: 20px;
+}
+
+.settings-profile-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.profile-name {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.settings-main {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    padding: 16px 0 24px;
+}
+
+.settings-panel {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.panel-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.panel-subtitle {
+    margin: 0;
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.settings-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.settings-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.settings-row-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.row-title {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.row-desc {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+/* fake toggle */
+.toggle {
+    width: 42px;
+    height: 22px;
+    border-radius: 999px;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    position: relative;
+    background: #e5e7eb;
+}
+
+.toggle-on {
+    background: #22c55e;
+}
+
+.toggle-knob {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    background: #ffffff;
+    transition: transform 0.2s ease;
+}
+
+.toggle-on .toggle-knob {
+    transform: translateX(20px);
+}
+
+.panel-input-row {
+    display: flex;
+    gap: 8px;
+}
+
+.panel-input {
+    flex: 1;
+    padding: 8px 10px;
+    border-radius: 999px;
+    border: 1px solid #d1d5db;
+    font-size: 13px;
+}
+
+.panel-add-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    border: none;
+    background: #f97316;
+    color: #ffffff;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.website-list {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+    font-size: 13px;
+    color: #374151;
+}
+
+.website-list li + li {
+    margin-top: 4px;
+}
+
+.settings-logout {
+    margin-top: 16px;
+    border: none;
+    background: #f97373;
+    color: #ffffff;
+    font-weight: 600;
+    padding: 14px 0;
+    border-radius: 18px 18px;
+    cursor: pointer;
+    font-size: 16px;
+}
