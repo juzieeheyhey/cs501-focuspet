@@ -44,27 +44,27 @@ function initNav() {
 // Load and render small HTML view fragments from ./views/{name}.html into #root
 const viewCache = new Map();
 
-function setNavVisible(visible) {
-    const nav = document.getElementById('mainNav');
-    if (!nav) return;
-    nav.style.display = visible ? 'flex' : 'none';
-}
+// function setNavVisible(visible) {
+//     const nav = document.getElementById('mainNav');
+//     if (!nav) return;
+//     nav.style.display = visible ? 'flex' : 'none';
+// }
 
 
 
-function initNavBar() {
-    const nav = document.getElementById('mainNav');
-    if (!nav) return;
+// function initNavBar() {
+//     const nav = document.getElementById('mainNav');
+//     if (!nav) return;
 
-    const navLinks = nav.querySelectorAll('.nav-link[data-view]');
-    navLinks.forEach(link => {
-        link.addEventListener('click', async () => {
-            const targetView = link.dataset.view;
-            if (!targetView) return;
-            await showView(targetView);
-        });
-    });
-}
+//     const navLinks = nav.querySelectorAll('.nav-link[data-view]');
+//     navLinks.forEach(link => {
+//         link.addEventListener('click', async () => {
+//             const targetView = link.dataset.view;
+//             if (!targetView) return;
+//             await showView(targetView);
+//         });
+//     });
+// }
 
 async function showView(name) {
     const root = document.getElementById('root');
@@ -103,7 +103,7 @@ async function showView(name) {
 
 async function attachViewHandlers(name) {
     if (name === 'home') {
-        setNavVisible(true);
+        // setNavVisible(true);
 
         const homeButtons = document.querySelectorAll('.home-btn[data-view]');
         homeButtons.forEach((btn) => {
@@ -117,7 +117,7 @@ async function attachViewHandlers(name) {
     }
 
     if (name === 'auth') {
-        setNavVisible(false);
+        // setNavVisible(false);
         const loginBtn = document.getElementById('loginBtn');
         const emailInput = document.getElementById('emailInput');
         const passwordInput = document.getElementById('passwordInput');
@@ -154,7 +154,7 @@ async function attachViewHandlers(name) {
     }
 
     if (name === 'app') {
-        setNavVisible(true);
+        // setNavVisible(true);
 
         // start app logic
         try { initEyeTrackerUI(); } catch (e) { console.error('initEyeTrackerUI failed', e); }
@@ -179,16 +179,16 @@ async function attachViewHandlers(name) {
         } catch (err) { console.warn('Failed to load modal view', err); }
     }
     if (name === 'analytics') {
-        setNavVisible(true);
+        // setNavVisible(true);
         try {
             initAnalytics()
         } catch (e) {
             console.error('initAnalytics failed: ', e)
         }
     }
-    
+
     if (name === 'settings') {
-        setNavVisible(true);
+        // setNavVisible(true);
 
         const settingsLogoutBtn = document.getElementById('settingsLogoutBtn');
         if (settingsLogoutBtn) {
@@ -198,7 +198,7 @@ async function attachViewHandlers(name) {
 
 
     if (name === 'settings') {
-        setNavVisible(true);
+        // setNavVisible(true);
 
         // panels: note the first .settings-panel is a profile/info panel, so
         // whitelist is panels[1], blacklist is panels[2]
@@ -296,6 +296,45 @@ async function attachViewHandlers(name) {
         renderList(stored.allow, wlList);
         renderList(stored.block, blList);
     }
+    if (name === 'signup') {
+        // setNavVisible(false);
+        const el = document.getElementById('signupMessage');
+        const signupBtn = document.getElementById('signupBtn');
+        const emailInput = document.getElementById('signupEmail');
+        const passwordInput = document.getElementById('signupPassword');
+
+        if (signupBtn) {
+            signupBtn.addEventListener('click', async () => {
+
+                const email = emailInput?.value?.trim() || "";
+                const password = passwordInput?.value || "";
+
+                if (!email || !password) {
+                    el.textContent = "Please enter email and password";
+                    el.style.display = "block";
+                    return;
+                }
+
+                signupBtn.disabled = true;
+                el.textContent = "";
+                el.style.display = "none";
+
+                const res = await attemptSignup(email, password);
+                signupBtn.disabled = false;
+
+                if (res.success) {
+                    el.textContent = "Account created! Redirecting to login...";
+                    el.style.display = "block";
+                    el.style.color = "#16a34a";
+                    setTimeout(() => showView("auth"), 800);
+                } else {
+                    el.textContent = res.error;
+                    el.style.display = "block";
+                }
+            });
+        }
+    }
+
 }
 
 function parseJwt(token) {
@@ -337,6 +376,34 @@ async function attemptLogin(email, password) {
     }
 }
 
+async function attemptSignup(email, password) {
+    const url = `${BACKEND_BASE}/api/auth/register`;
+
+    try {
+        const resp = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                Email: email,
+                Password: password
+            })
+        });
+
+        if (!resp.ok) {
+            const errText = await resp.text();
+            throw new Error(errText || "Failed to register");
+        }
+
+        // backend returns: "Registered successfully"
+        const msg = await resp.text();
+        return { success: true, message: msg };
+
+    } catch (err) {
+        return { success: false, error: err.message || "Signup failed" };
+    }
+}
+
+
 function showAuthMessage(msg) {
     const el = document.getElementById('loginMessage');
     if (el) {
@@ -364,7 +431,7 @@ function logout() {
 
     // reflect logged-out state
     updateNav();
-    setNavVisible(false);
+    // setNavVisible(false);
 
     // send user back to auth screen
     showView('auth');
