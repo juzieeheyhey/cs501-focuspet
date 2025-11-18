@@ -196,6 +196,106 @@ async function attachViewHandlers(name) {
         }
     }
 
+
+    if (name === 'settings') {
+        setNavVisible(true);
+
+        // panels: note the first .settings-panel is a profile/info panel, so
+        // whitelist is panels[1], blacklist is panels[2]
+        const panels = Array.from(document.querySelectorAll('.settings-panel'));
+        const wlPanel = panels[1];
+        const blPanel = panels[2];
+
+        const settingsLogoutBtn = document.getElementById('settingsLogoutBtn');
+        if (settingsLogoutBtn) settingsLogoutBtn.addEventListener('click', () => logout());
+
+        if (!wlPanel || !blPanel) return;
+
+        const wlInput = wlPanel.querySelector('.panel-input');
+        const wlAdd = wlPanel.querySelector('.panel-add-btn');
+        const wlList = wlPanel.querySelector('.website-list');
+
+        const blInput = blPanel.querySelector('.panel-input');
+        const blAdd = blPanel.querySelector('.panel-add-btn');
+        const blList = blPanel.querySelector('.website-list');
+
+        function readStored() {
+            try {
+                const allow = JSON.parse(localStorage.getItem('allowlist') || '[]');
+                const block = JSON.parse(localStorage.getItem('blacklist') || '[]');
+                return { allow, block };
+            } catch (e) {
+                return { allow: [], block: [] };
+            }
+        }
+
+        function saveStored(allow, block) {
+            localStorage.setItem('allowlist', JSON.stringify(allow));
+            localStorage.setItem('blacklist', JSON.stringify(block));
+            // notify native host (if present)
+            try {
+                if (window.electronAPI?.sendToChrome) {
+                    window.electronAPI.sendToChrome({ type: 'SET_FILTERS', payload: { allowlist: allow, blacklist: block, sessionOn: false } })
+                        .catch(() => { /* best-effort */ });
+                }
+            } catch { }
+        }
+
+        function renderList(arr, ul) {
+            if (!ul) return;
+            ul.innerHTML = '';
+            for (const item of arr) {
+                const li = document.createElement('li');
+                li.className = 'website-item';
+                const text = document.createElement('span');
+                text.className = 'website-text';
+                text.textContent = item;
+                const rem = document.createElement('button');
+                rem.className = 'website-remove';
+                rem.type = 'button';
+                rem.textContent = '✕';
+                rem.title = 'Remove';
+                rem.addEventListener('click', () => {
+                    const s = readStored();
+                    const target = (ul === wlList) ? s.allow : s.block;
+                    const idx = target.indexOf(item);
+                    if (idx >= 0) {
+                        target.splice(idx, 1);
+                        saveStored(s.allow, s.block);
+                        renderList(s.allow, wlList);
+                        renderList(s.block, blList);
+                    }
+                });
+                li.appendChild(text);
+                li.appendChild(rem);
+                ul.appendChild(li);
+            }
+        }
+
+        function addItemToList(val, listName) {
+            const cleaned = (val || '').trim();
+            if (!cleaned) return;
+            const s = readStored();
+            const target = listName === 'allow' ? s.allow : s.block;
+            if (target.includes(cleaned)) return;
+            target.push(cleaned);
+            saveStored(s.allow, s.block);
+            renderList(s.allow, wlList);
+            renderList(s.block, blList);
+        }
+
+        if (wlAdd) wlAdd.addEventListener('click', () => { addItemToList(wlInput?.value, 'allow'); if (wlInput) wlInput.value = ''; });
+        if (blAdd) blAdd.addEventListener('click', () => { addItemToList(blInput?.value, 'block'); if (blInput) blInput.value = ''; });
+
+        // also allow Enter key on inputs
+        if (wlInput) wlInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); wlAdd?.click(); } });
+        if (blInput) blInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); blAdd?.click(); } });
+
+        // initial render
+        const stored = readStored();
+        renderList(stored.allow, wlList);
+        renderList(stored.block, blList);
+    }
 }
 
 function parseJwt(token) {

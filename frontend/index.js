@@ -1,6 +1,78 @@
 import { app, BrowserWindow, session, ipcMain } from 'electron';
 import path from 'node:path';
 import activeWin from 'active-win';
+import { spawn } from 'child_process';
+import fs from 'fs';
+
+let HOST_BINARY;
+
+function resolveHostBinary() {
+    const isDev = !app.isPackaged;
+    const os = process.platform;
+    const arch = process.arch;
+
+    if (isDev) {
+        // Development binaries inside repo
+        if (os === "darwin") {
+            return arch === "arm64"
+                ? path.join(process.cwd(), "native/macos-arm64/focuspet-host")
+                : path.join(process.cwd(), "native/macos-x64/focuspet-host");
+        }
+        if (os === "win32") {
+            return path.join(process.cwd(), "native/win-x64/focuspet-host.exe");
+        }
+        return path.join(process.cwd(), "native/linux-x64/focuspet-host");
+    }
+
+    // Production: packaged into resources
+    if (os === "win32") {
+        return path.join(process.resourcesPath, "focuspet-host.exe");
+    }
+    return path.join(process.resourcesPath, "focuspet-host");
+}
+HOST_BINARY = resolveHostBinary();
+console.log("Native Host path:", HOST_BINARY);
+
+ipcMain.handle("native:send", async (_event, payload) => {
+    return new Promise((resolve, reject) => {
+        try {
+            const proc = spawn(HOST_BINARY, [], { stdio: ["pipe", "pipe", "ignore"] });
+
+            const json = Buffer.from(JSON.stringify(payload));
+            const header = Buffer.alloc(4);
+            header.writeUInt32LE(json.length, 0);
+
+            let resolved = false;
+
+            proc.stdout.on("data", () => {
+                if (!resolved) {
+                    resolved = true;
+                    resolve(true);
+                }
+            });
+
+            proc.on("error", (err) => {
+                if (!resolved) {
+                    resolved = true;
+                    reject(err);
+                }
+            });
+
+            proc.on("close", (code) => {
+                if (!resolved) {
+                    code === 0 ? resolve(true) : reject(new Error(`Native host exit ${code}`));
+                }
+            });
+
+            proc.stdin.write(header);
+            proc.stdin.write(json);
+            proc.stdin.end();
+        } catch (err) {
+            reject(err);
+        }
+    });
+});
+
 
 let mainWindow;
 let activeWinInterval = null;
