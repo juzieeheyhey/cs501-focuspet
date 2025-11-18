@@ -1,5 +1,5 @@
 import { initEyeTrackerUI } from './features/eyetracking.js';
-
+import { initAnalytics } from './features/analytics.js';
 // Backend base URL for auth calls. Update if your backend runs on a different port.
 const BACKEND_BASE = window.BACKEND_BASE || 'http://localhost:5000';
 
@@ -43,6 +43,29 @@ function initNav() {
 
 // Load and render small HTML view fragments from ./views/{name}.html into #root
 const viewCache = new Map();
+
+function setNavVisible(visible) {
+    const nav = document.getElementById('mainNav');
+    if (!nav) return;
+    nav.style.display = visible ? 'flex' : 'none';
+}
+
+
+
+function initNavBar() {
+    const nav = document.getElementById('mainNav');
+    if (!nav) return;
+
+    const navLinks = nav.querySelectorAll('.nav-link[data-view]');
+    navLinks.forEach(link => {
+        link.addEventListener('click', async () => {
+            const targetView = link.dataset.view;
+            if (!targetView) return;
+            await showView(targetView);
+        });
+    });
+}
+
 async function showView(name) {
     const root = document.getElementById('root');
     if (!root) return;
@@ -77,6 +100,7 @@ async function showView(name) {
 
 async function attachViewHandlers(name) {
     if (name === 'auth') {
+        setNavVisible(false);
         const loginBtn = document.getElementById('loginBtn');
         const emailInput = document.getElementById('emailInput');
         const passwordInput = document.getElementById('passwordInput');
@@ -113,6 +137,9 @@ async function attachViewHandlers(name) {
     }
 
     if (name === 'app') {
+        setNavVisible(true);
+
+
         const logoutBtn = document.getElementById('logoutBtn');
         const token = localStorage.getItem('authToken');
         if (token && logoutBtn) logoutBtn.style.display = 'inline-block';
@@ -141,6 +168,15 @@ async function attachViewHandlers(name) {
             }
         } catch (err) { console.warn('Failed to load modal view', err); }
     }
+    if (name === 'analytics') {
+        setNavVisible(true);
+        try {
+            initAnalytics()
+        } catch (e) {
+            console.error('initAnalytics failed: ', e)
+        }
+    }
+
 }
 
 function parseJwt(token) {
@@ -212,7 +248,10 @@ window.addEventListener('DOMContentLoaded', () => {
     updateNav();
 
     const token = localStorage.getItem('authToken');
+
+    initNavBar();
     if (token) {
+
         showView('app');
         // show logout control
         if (logoutBtn) logoutBtn.style.display = 'inline-block';
