@@ -1,5 +1,5 @@
 import { initEyeTrackerUI } from './features/eyetracking.js';
-
+import { initAnalytics } from './features/analytics.js';
 // Backend base URL for auth calls. Update if your backend runs on a different port.
 const BACKEND_BASE = window.BACKEND_BASE || 'http://localhost:5000';
 
@@ -167,6 +167,14 @@ async function attachViewHandlers(name) {
                 }
             }
         } catch (err) { console.warn('Failed to load modal view', err); }
+    }
+    if (name === 'analytics') {
+        setNavVisible(true);
+        try {
+            initAnalytics()
+        } catch (e) {
+            console.error('initAnalytics failed: ', e)
+        }
     }
 
 }

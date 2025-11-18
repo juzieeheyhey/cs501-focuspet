@@ -363,6 +363,8 @@ button:disabled {
     height: auto;
     display: block;
 }*/
+
+/* blur the background page */
 .blur {
     filter: blur(6px);
     transition: filter 0.25s ease;

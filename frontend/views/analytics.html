@@ -1,3 +1,27 @@
-<div id="analytics">
-    <h1>Analytics </h1>
+<div class="analyticsView" id="analytics">
+    <h1 class="analytics-title">Analytics Dashboard</h1>
+    <section class="analytics-overview">
+        <article class="pet-card"></article>
+        <article class="stat-card">
+            <div class="stat-value" id="avgFocusScore">--%</div>
+            <div class="stat-label">Average Focus Score</div>
+        </article>
+        <article class="stat-card">
+            <div class="stat-value" id="totalSessions">--</div>
+            <div class="stat-label">Total Sessions</div>
+        </article>
+        <article class="stat-card">
+            <div class="stat-value" id="currentStreak">--</div>
+            <div class="stat-label">Current Streak</div>
+        </article>
+    </section>
+    <section class="recent-session">
+        <header class="card-header">
+            <h2>Recent Sessions</h2>
+            <p class="card-subtitle">Your latest focus sessions</p>
+        </header>
+        <ul class="session-list" id="recentSessionsList">
+            <!-- <li class="session-item">…</li> -->
+        </ul>
+    </section>
 </div>
