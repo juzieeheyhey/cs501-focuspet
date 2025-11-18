@@ -18,5 +18,34 @@
   "devDependencies": {
     "esbuild": "^0.25.11"
   },
+  "build": {
+    "extraResources": [
+      {
+        "from": "native/macos-arm64/focuspet-host",
+        "to": "focuspet-host",
+        "filter": ["**/*"],
+        "platform": "darwin",
+        "arch": "arm64"
+      },
+      {
+        "from": "native/macos-x64/focuspet-host",
+        "to": "focuspet-host",
+        "platform": "darwin",
+        "arch": "x64"
+      },
+      {
+        "from": "native/win-x64/focuspet-host.exe",
+        "to": "focuspet-host.exe",
+        "platform": "win32",
+        "arch": "x64"
+      },
+      {
+        "from": "native/linux-x64/focuspet-host",
+        "to": "focuspet-host",
+        "platform": "linux",
+        "arch": "x64"
+      }
+    ]
+  },
   "type": "module"
 }
