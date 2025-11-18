@@ -102,6 +102,20 @@ async function showView(name) {
 }
 
 async function attachViewHandlers(name) {
+    if (name === 'home') {
+        setNavVisible(true);
+
+        const homeButtons = document.querySelectorAll('.home-btn[data-view]');
+        homeButtons.forEach((btn) => {
+            btn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const targetView = btn.dataset.view;
+                if (!targetView) return;
+                await showView(targetView);
+            });
+        });
+    }
+
     if (name === 'auth') {
         setNavVisible(false);
         const loginBtn = document.getElementById('loginBtn');
