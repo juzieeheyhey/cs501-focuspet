@@ -1,0 +1,9 @@
+{
+  "name": "com.focuspet.host",
+  "description": "FocusPet Electron Bridge",
+  "path": "/Users/tanishbhowmick/Documents/Projects/cs501-focuspet/frontend/native/macos-arm64/focuspet-host",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://habnbidfbpanlghaohbiakbnplfmlkee/"
+  ]
+}

@@ -1,0 +1,319 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            width: 380px;
+            background: #BBE5D6;
+            color: #1e293b;
+        }
+
+        .header {
+            background: white;
+            color: black;
+            text-align: center;
+            padding: 16px;
+
+        }
+
+        .header h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .pet-icon {
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .content {
+            padding: 16px;
+        }
+
+        .session-toggle {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .session-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #94a3b8;
+            transition: background 0.3s ease;
+        }
+
+        .status-indicator.active {
+            background: #10b981;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 48px;
+            height: 26px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1;
+            transition: 0.3s;
+            border-radius: 26px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(22px);
+        }
+
+        .filter-section {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .filter-section h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #475569;
+        }
+
+        .filter-section.whitelist h4 {
+            color: #059669;
+        }
+
+        .filter-section.blacklist h4 {
+            color: #dc2626;
+        }
+
+        .icon {
+            width: 18px;
+            height: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .icon.whitelist {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .icon.blacklist {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        textarea {
+            width: 100%;
+            height: 90px;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            resize: none;
+            transition: border-color 0.2s ease;
+            background: #f8fafc;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #8b5cf6;
+            background: white;
+        }
+
+        textarea::placeholder {
+            color: #94a3b8;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        #apply {
+            background: #E38956;
+            color: white;
+            box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
+        }
+
+        #apply:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(139, 92, 246, 0.4);
+        }
+
+        #clear {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        #clear:hover {
+            background: #e2e8f0;
+        }
+
+        .help-text {
+            background: #fef3c7;
+            border-left: 3px solid #f59e0b;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            line-height: 1.5;
+            color: #78350f;
+        }
+
+        .help-text code {
+            background: #fde68a;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h3>
+            FocusPet Browser Filter
+        </h3>
+    </div>
+
+    <div class="content">
+    <!-- Auth section -->
+    <div id="authSection" class="filter-section" style="margin-bottom:12px;">
+            <h4 style="margin-bottom:8px;">Extension Sign-in</h4>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+                <input id="emailInput" type="email" placeholder="you@example.com" style="padding:8px;border-radius:6px;border:1px solid #e2e8f0;" />
+                <input id="passwordInput" type="password" placeholder="Password" style="padding:8px;border-radius:6px;border:1px solid #e2e8f0;" />
+                <div style="display:flex;gap:8px;">
+                    <button id="loginBtn" style="flex:1;background:#4f46e5;color:white;padding:8px;border-radius:6px;border:none;">Sign in</button>
+                    <button id="logoutBtn" style="flex:1;display:none;background:#ef4444;color:white;padding:8px;border-radius:6px;border:none;">Sign out</button>
+                </div>
+                <div id="status" style="font-size:12px;color:#475569;">Not logged in</div>
+            </div>
+        </div>
+        <div class="session-toggle">
+            <div class="session-label">
+                <span class="status-indicator" id="statusDot"></span>
+                <span>Focus Session</span>
+            </div>
+            <label class="toggle-switch">
+                <input id="session" type="checkbox">
+                <span class="slider"></span>
+            </label>
+    </div>
+
+    <!-- Main features (hidden unless logged in) -->
+    <div id="features">
+    <div class="filter-section whitelist">
+            <h4>
+                <span class="icon whitelist">✓</span>
+                Whitelist (Allowed Sites)
+            </h4>
+            <textarea id="wl" placeholder="example.edu&#10;*.school.edu&#10;"></textarea>
+    </div>
+
+    <div class="filter-section blacklist">
+            <h4>
+                <span class="icon blacklist">✕</span>
+                Blacklist (Blocked Sites)
+            </h4>
+            <textarea id="bl" placeholder="facebook.com&#10;youtube.com/shorts&#10;"></textarea>
+        </div>
+
+        <div class="button-group">
+            <button id="reloadBtn">🔄 Reload</button>
+            <button id="apply" style="display:none">💾 Save & Apply</button>
+            <button id="clear" style="display:none">🗑️ Clear All</button>
+        </div>
+        </div>
+
+    </div>
+
+    <script src="popup-config.js"></script>
+    <script src="popup.js"></script>
+
+</body>
+
+</html>
