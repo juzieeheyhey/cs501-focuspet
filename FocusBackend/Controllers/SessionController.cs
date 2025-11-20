@@ -12,7 +12,6 @@ using System.Text;
 
 namespace FocusBackend.Controllers
 {
-  // Replace ApplicationDbContext and Session/SessionDto with your project's actual types if different.
   [ApiController]
   [Route("api/[controller]")]
   public class SessionController : ControllerBase

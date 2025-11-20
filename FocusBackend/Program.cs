@@ -1,14 +1,40 @@
 using FocusBackend.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using Microsoft.Extensions.Logging;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token.",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 builder.Services.AddSingleton<MongoContext>();
 
 // CORS: allow the Electron frontend (during development).
@@ -53,7 +79,7 @@ if (app.Environment.IsDevelopment())
 // Enable CORS early in the pipeline so preflight requests are handled
 app.UseCors("AllowLocalDev");
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
