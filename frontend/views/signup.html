@@ -2,22 +2,41 @@
 <!-- show when not logged in -->
 
 <div id="authView" class="auth-view">
-    <div class="auth-card">
-        <h2 class="auth-title">Sign Up</h2>
-        <p class="auth-subtitle">
-        </p>
+    <div class="auth-container">
+        <div class="auth-left">
+            <h1 class="auth-title">Sign Up</h1>
+            <p class="auth-subtitle">Create a new account</p>
 
-        <div class="auth-fields">
-            <input id="signupEmail" type="email" placeholder="you@example.com" class="auth-input" />
-            <input id="signupPassword" type="password" placeholder="Password" class="auth-input" />
+            <div class="auth-fields">
+                <input 
+                    id="signupEmail" 
+                    type="email" 
+                    placeholder="you@example.com" 
+                    class="auth-input" 
+                />
+                <input 
+                    id="signupPassword" 
+                    type="password" 
+                    placeholder="Password" 
+                    class="auth-input" 
+                />
+            </div>
+
+            <div class="auth-actions">
+                <button id="signupBtn" class="auth-button">
+                    Sign Up
+                </button>
+            </div>
+
+            <div id="signupMessage" class="auth-message"></div>
         </div>
 
-        <div class="auth-actions">
-            <button id="signupBtn" class="auth-button">
-                Sign Up
-            </button>
+        <div class="auth-right">
+            <iframe
+                src="./animation/index.html"
+                class="husky-iframe"
+                scrolling="no"
+            ></iframe>
         </div>
-
-        <div id="signupMessage" class="auth-message"></div>
     </div>
 </div>

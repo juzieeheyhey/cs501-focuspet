@@ -2,33 +2,41 @@
 <!-- show when not logged in -->
 
 <div id="authView" class="auth-view">
-    <div class="auth-card">
-        <h2 class="auth-title">Log In</h2>
-        <p class="auth-subtitle">
-            Log in to connect to the backend
-        </p>
+    <div class="auth-container">
+        <div class="auth-left">
+            <h1 class="auth-title">Log In</h1>
+            <p class="auth-subtitle">Log in to connect to the backend</p>
 
-        <div class="auth-fields">
-            <input
-                id="emailInput"
-                type="email"
-                placeholder="you@example.com"
-                class="auth-input"
-            />
-            <input
-                id="passwordInput"
-                type="password"
-                placeholder="Password"
-                class="auth-input"
-            />
+            <div class="auth-fields">
+                <input
+                    id="emailInput"
+                    type="email"
+                    placeholder="you@example.com"
+                    class="auth-input"
+                />
+                <input
+                    id="passwordInput"
+                    type="password"
+                    placeholder="Password"
+                    class="auth-input"
+                />
+            </div>
+
+            <div class="auth-actions">
+                <button id="loginBtn" class="auth-button">
+                    Log In
+                </button>
+            </div>
+
+            <div id="loginMessage" class="auth-message"></div>
         </div>
 
-        <div class="auth-actions">
-            <button id="loginBtn" class="auth-button">
-                Log in
-            </button>
+        <div class="auth-right">
+            <iframe
+                src="./animation/index.html"
+                class="husky-iframe"
+                scrolling="no"
+            ></iframe>
         </div>
-
-        <div id="loginMessage" class="auth-message"></div>
     </div>
 </div>
