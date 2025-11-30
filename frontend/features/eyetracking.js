@@ -287,9 +287,9 @@ async function stopSession() {
 
     // finalize current state's time
     const now = Date.now();
-    const elapsed = now - stateStartTime;
-    if (currentState === 'looking') lookingTimeTotal += elapsed;
-    else if (currentState === 'away') awayTimeTotal += elapsed;
+    // const elapsed = now - stateStartTime;
+    // if (currentState === 'looking') lookingTimeTotal += elapsed;
+    // else if (currentState === 'away') awayTimeTotal += elapsed;
 
 
     // stop UI timer

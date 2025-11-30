@@ -171,6 +171,11 @@ function renderActivityAnalytics(containerEl, activity) {
 
     if (!containerEl) return;
 
+    if (!activity.length) {
+        containerEl.textContent = "No activity yet.";
+        return;
+    }
+
 
     containerEl.innerHTML = "";
 
