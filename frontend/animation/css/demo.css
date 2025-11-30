@@ -1,0 +1,91 @@
+*, *::after, *::before {
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Avenir, 'Helvetica Neue', 'Lato', 'Segoe UI', Helvetica, Arial, sans-serif;
+    color: #444;
+    background: #f6f6f6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+    outline: none;
+    color: #fff;
+    text-decoration: none;
+}
+
+a:hover, a:focus {
+    color: #2C2F36;
+    outline: none;
+}
+
+.info {
+    display: none;
+    max-width: 300px;
+    font-weight: bold;
+    color: #d14684;
+    background: #fff;
+    border-radius: 15px;
+    padding: 1em;
+    margin: 1em auto;
+}
+
+.hidden {
+    position: absolute;
+    overflow: hidden;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+.container {
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+}
+
+/* Content */
+.content {
+    padding: 3em 0;
+}
+
+@media screen and (max-width: 40em) {
+    .info {
+        display: block;
+    }
+}
+
+/* ===== FocusPet overrides: remove mountains / waves / trees, keep only dog ===== */
+
+html,
+body {
+  /* let the parent page show through, or just keep this a flat color */
+    background: transparent;
+}
+
+/* keep the container but kill its landscape background + animation */
+.content--husky {
+    background: none !important;
+    animation: none !important;
+    -webkit-animation: none !important;
+}
+
+/* remove the big wavy shapes drawn with pseudo-elements */
+.content--husky::before,
+.content--husky::after {
+    display: none !important;
+}
+
+/* inside the scene, hide everything except the actual dog */
+.content--husky > :not(.husky) {
+    display: none !important;
+}
+
+/* OPTIONAL: if you also want to remove the thin ground line under the dog,
+   keep this rule; otherwise delete it */
+.husky::after {
+    display: none !important;
+}
