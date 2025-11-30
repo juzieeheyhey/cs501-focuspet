@@ -449,7 +449,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     const token = localStorage.getItem('authToken');
 
-    initNavBar();
+    initNav();
     if (token) {
 
         showView('app');
