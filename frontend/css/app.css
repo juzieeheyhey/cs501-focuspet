@@ -89,7 +89,8 @@
 }
 
 .btn-start,
-.btn-stop {
+.btn-stop,
+.btn-pause {
     min-width: 150px;
     padding: 12px 0;
     border-radius: 25px;
@@ -105,18 +106,26 @@
     background: #71d7ac;
 }
 
+.btn-pause {
+    background: #ffa500;
+    opacity: 0.85;
+}
+
 .btn-stop {
     background: #f97373;
     opacity: 0.85;
 }
 
 .btn-start:hover,
-.btn-stop:hover:not(:disabled) {
+.btn-stop:hover:not(:disabled),
+.btn-pause:hover:not(:disabled) {
     transform: scale(1.03);
     opacity: 0.95;
 }
 
-.btn-stop:disabled {
+.btn-start:disabled,
+.btn-stop:disabled,
+.btn-pause:disabled {
     opacity: 0.45;
     cursor: default;
 }

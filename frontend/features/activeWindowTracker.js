@@ -38,13 +38,14 @@ export function startSessionTracking() {
 }
 
 export function stopSessionTracking() {
-    running = false;
+
     const endTs = Date.now();
     const durationSession = Math.round((endTs - startTs));
-    if (lastActiveApp != null) {
+    if (running && lastActiveApp != null) {
         const elapsedApp = endTs - lastActiveTs;
         appTimes[lastActiveApp] = (appTimes[lastActiveApp] || 0) + elapsedApp;
     }
+    running = false;
     try { window.electronAPI?.requestStopPolling?.(); } catch { }
     return { ...appTimes };
 }
@@ -59,3 +60,27 @@ export function resetSessionTracking() {
 export function getSessionTrackingTotals() {
     return { ...appTimes };
 }
+
+export function pauseSessionTracking() {
+    if (!running) return;
+
+    const now = Date.now();
+
+    // finalize the last active app time up to pause
+    if (lastActiveApp != null) {
+        const elapsed = now - lastActiveTs;
+        appTimes[lastActiveApp] = (appTimes[lastActiveApp] || 0) + elapsed;
+    }
+
+    // stop future accumulation
+    running = false;
+}
+
+export function resumeSessionTracking() {
+    if (running) return;
+
+    // resume tracking from now
+    lastActiveTs = Date.now();
+    running = true;
+}
+

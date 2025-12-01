@@ -5,10 +5,9 @@
     <div class="container">
         <div class="app-left">
             <h1 class="app-title">Focus Session</h1>
-            <p class="app-subtitle">Prototype v1.0</p>
 
             <div class="status-display">
-                <!-- <div class="state-indicator" id="stateIcon">🐈</div> -->
+
                 <div class="state-text state-idle" id="stateText">IDLE</div>
 
                 <div class="timer-label">Session Time</div>
@@ -17,6 +16,7 @@
 
             <div class="controls">
                 <button class="btn-start" id="startBtn">Start Session</button>
+                <button class="btn-pause" id="pauseBtn" disabled>Pause Session</button>
                 <button class="btn-stop" id="stopBtn" disabled>Stop Session</button>
             </div>
 
@@ -37,12 +37,7 @@
         </div>
 
         <div class="app-right">
-            <iframe
-                src="./animation/index.html"
-                class="husky-iframe"
-                id="focusPet"
-                scrolling="no"
-            ></iframe>
+            <iframe src="./animation/index.html" class="husky-iframe" id="focusPet" scrolling="no"></iframe>
         </div>
     </div>
 </div>

@@ -1,7 +1,14 @@
 
 import { startCamera, stopCamera } from './camera.js';
 import { loadLandmarker, detectForVideo, closeLandmarker } from './landmarker.js';
-import { initActiveWindowTracker, startSessionTracking, stopSessionTracking, resetSessionTracking } from './activeWindowTracker.js';
+import {
+    initActiveWindowTracker,
+    startSessionTracking,
+    stopSessionTracking,
+    resetSessionTracking,
+    pauseSessionTracking,
+    resumeSessionTracking
+} from './activeWindowTracker.js';
 import { mergeTotals, saveLastSession } from './storage.js';
 import { postSession, getSession } from '../api/session-api.js';
 
@@ -17,6 +24,7 @@ let lookingTimeEl = null;
 let awayTimeEl = null;
 let focusScoreEl = null;
 let petFrame = null;
+let pauseBtn = null;
 
 // ====== State machine thresholds ======
 const ABSENT_MS = 800; // no landmarks for this long → AWAY
@@ -39,6 +47,11 @@ let awayTimeTotal = 0;
 let currentState = "idle";
 let stateStartTime = 0;
 
+let sessionPaused = false;
+let pausedAt = 0;           // timestamp when pause started
+let pausedDuration = 0;     // how long we've been paused total
+
+
 let timerInterval = null;
 
 // Tracker state
@@ -52,21 +65,21 @@ let ema = { x: null, y: null }; // for future gaze use
 
 // ====== UI helpers ======
 const states = {
-    idle: { 
-        icon: "🐈", 
-        text: "IDLE", 
+    idle: {
+        icon: "🐈",
+        text: "IDLE",
         class: "state-idle",
         animSrc: "./animation/index.html",
     },
-    looking: { 
-        icon: "😼", 
-        text: "LOOKING", 
+    looking: {
+        icon: "😼",
+        text: "LOOKING",
         class: "state-looking",
         animSrc: "./animation/index.html",
     },
-    away: { 
-        icon: "😿", 
-        text: "AWAY", 
+    away: {
+        icon: "😿",
+        text: "AWAY",
         class: "state-away",
         animSrc: "./animation/index2.html",
     },
@@ -109,10 +122,16 @@ function setState(newState) {
     }
 }
 
-// update the timer UI, looking time, and away time, and focus score
+// update the timer UI, looking time, away time, and focus score
 function updateTimerUI() {
-    if (!sessionActive) return; // if the session is not active, do nothing
-    totalSessionTime = Date.now() - sessionStartTime;
+    if (!sessionActive) return;
+
+    // While paused, "now" is frozen at the moment we paused
+    const now = sessionPaused ? pausedAt : Date.now();
+
+    // Effective start = real start + total paused time so far
+    const effectiveStart = sessionStartTime + pausedDuration;
+    totalSessionTime = now - effectiveStart;
 
     // format hh:mm:ss
     const secs = Math.floor(totalSessionTime / 1000);
@@ -124,17 +143,23 @@ function updateTimerUI() {
     // include the ongoing state's elapsed time in the display
     let looking = lookingTimeTotal;
     let away = awayTimeTotal;
-    const now = Date.now();
-    if (currentState === "looking") looking += now - stateStartTime;
-    if (currentState === "away") away += now - stateStartTime;
+
+    // While paused, don't add more time
+    if (!sessionPaused) {
+        if (currentState === "looking") looking += now - stateStartTime;
+        if (currentState === "away") away += now - stateStartTime;
+    }
 
     lookingTimeEl.textContent = `${Math.floor(looking / 1000)}s`;
     awayTimeEl.textContent = `${Math.floor(away / 1000)}s`;
 
     const totalActive = looking + away;
-    const focusScore = totalActive > 0 ? Math.round((looking / totalActive) * 100) : 0;
+    const focusScore = totalActive > 0
+        ? Math.round((looking / totalActive) * 100)
+        : 0;
     focusScoreEl.textContent = `${focusScore}%`;
 }
+
 
 const smoothEMA = (prev, val, a = 0.25) => (prev == null ? val : prev + a * (val - prev));
 
@@ -187,6 +212,12 @@ function analyzeLandmarks(lms, w, h) {
 // Main tracking loop
 async function trackLoop() {
     if (!sessionActive) return;
+
+    if (sessionPaused) {
+        requestAnimationFrame(trackLoop);
+        return;
+    }
+
     const det = await detectForVideo(landmarker, video, performance.now());
     const now = Date.now();
 
@@ -258,6 +289,10 @@ async function startSession() {
     if (sessionActive) return;
     sessionActive = true;
 
+    sessionPaused = false;
+    pausedAt = 0;
+    pausedDuration = 0;
+
     sessionStartTime = Date.now();
     // Reset per-session state counters
     lookingTimeTotal = 0;
@@ -297,6 +332,7 @@ async function startSession() {
 
     startBtn.disabled = true;
     stopBtn.disabled = false;
+    pauseBtn.disabled = false;
 
     // Notify Chrome extension native host to enable filters for this session
     try {
@@ -314,6 +350,16 @@ async function startSession() {
 async function stopSession() {
     if (!sessionActive) return;
     sessionActive = false;
+
+    sessionPaused = false;
+    pausedAt = 0;
+    pausedDuration = 0;
+
+    if (pauseBtn) {
+        pauseBtn.textContent = "Pause Session";
+        pauseBtn.disabled = true;
+    }
+
 
     // finalize current state's time
     const now = Date.now();
@@ -361,7 +407,7 @@ async function stopSession() {
             userId: localStorage.getItem('userId'),
             startTime: new Date(sessionStartTime).toISOString(),
             endTime: new Date(now).toISOString(),
-            durationSession: lookingTimeTotal, // currently in ms
+            durationSession: totalSessionTime, // currently in ms
             activity: totals,
             focusScore: Math.round(focusScore * 100),
         };
@@ -391,6 +437,42 @@ async function stopSession() {
     }
 }
 
+function pauseSession() {
+    if (!sessionActive || sessionPaused) return;
+    pauseSessionTracking();
+    const now = Date.now();
+    sessionPaused = true;
+    pausedAt = now;
+
+    // finalize the current state's time up to pause
+    const elapsed = now - stateStartTime;
+    if (currentState === "looking") {
+        lookingTimeTotal += elapsed;
+    } else if (currentState === "away") {
+        awayTimeTotal += elapsed;
+    }
+
+    // optional: makes it clear this segment ended here
+    stateStartTime = now;
+}
+
+
+function resumeSession() {
+    if (!sessionActive || !sessionPaused) return;
+    resumeSessionTracking();
+    const now = Date.now();
+    const pausedThis = now - pausedAt;
+
+    pausedDuration += pausedThis;  // keep session timer correct
+
+    sessionPaused = false;
+    pausedAt = 0;
+    stateStartTime = now;          // new LOOKING/AWAY segment starts now
+}
+
+
+
+
 export function initEyeTrackerUI() {
     // Resolve DOM elements for the currently-inserted view
     startBtn = document.getElementById("startBtn");
@@ -401,10 +483,31 @@ export function initEyeTrackerUI() {
     lookingTimeEl = document.getElementById("lookingTime");
     awayTimeEl = document.getElementById("awayTime");
     focusScoreEl = document.getElementById("focusScore");
+    pauseBtn = document.getElementById("pauseBtn");
+
+    let isPaused = false; // control UI button
+    if (pauseBtn) {
+        pauseBtn.disabled = true;
+        pauseBtn.textContent = "Pause Session";
+        pauseBtn.addEventListener("click", () => {
+            if (!isPaused) {
+                // --- Pause the session ---
+                pauseSession();
+                pauseBtn.textContent = "Resume Session";
+            } else {
+                // --- Resume the session ---
+                resumeSession();
+                pauseBtn.textContent = "Pause Session";
+            }
+            isPaused = !isPaused;
+        });
+    }
     petFrame = document.getElementById("focusPet");
 
     if (startBtn) startBtn.addEventListener('click', startSession);
     if (stopBtn) stopBtn.addEventListener('click', stopSession);
+
+
 
     // Initialize active-window tracker (it will subscribe to preload events)
     try { initActiveWindowTracker(); } catch { }
