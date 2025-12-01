@@ -16,6 +16,7 @@ let timerEl = null;
 let lookingTimeEl = null;
 let awayTimeEl = null;
 let focusScoreEl = null;
+let petFrame = null;
 
 // ====== State machine thresholds ======
 const ABSENT_MS = 800; // no landmarks for this long → AWAY
@@ -51,9 +52,24 @@ let ema = { x: null, y: null }; // for future gaze use
 
 // ====== UI helpers ======
 const states = {
-    idle: { icon: "🐈", text: "IDLE", class: "state-idle" },
-    looking: { icon: "😼", text: "LOOKING", class: "state-looking" },
-    away: { icon: "😿", text: "AWAY", class: "state-away" },
+    idle: { 
+        icon: "🐈", 
+        text: "IDLE", 
+        class: "state-idle",
+        animSrc: "./animation/index.html",
+    },
+    looking: { 
+        icon: "😼", 
+        text: "LOOKING", 
+        class: "state-looking",
+        animSrc: "./animation/index.html",
+    },
+    away: { 
+        icon: "😿", 
+        text: "AWAY", 
+        class: "state-away",
+        animSrc: "./animation/index2.html",
+    },
 };
 
 // set the state of the tracker
@@ -72,11 +88,25 @@ function setState(newState) {
 
     // update the UI to the new state
     const s = states[newState]; // get the state icon and text
-    stateIcon.textContent = s.icon;
-    stateText.textContent = s.text;
-    stateText.className = `state-text ${s.class}`;
 
+    // stateIcon.textContent = s.icon;
+    // stateText.textContent = s.text;
+    // stateText.className = `state-text ${s.class}`;
 
+    if (stateIcon) stateIcon.textContent = s.icon;
+    if (stateText) {
+        stateText.textContent = s.text;
+        stateText.className = `state-text ${s.class}`;
+    }
+
+    // update animation 
+    if (petFrame && s.animSrc) {
+        // avoid unnecessary reloads of the same animation
+        if (petFrame.dataset.currentAnim !== s.animSrc) {
+            petFrame.src = s.animSrc;
+            petFrame.dataset.currentAnim = s.animSrc;
+        }
+    }
 }
 
 // update the timer UI, looking time, and away time, and focus score
@@ -371,6 +401,7 @@ export function initEyeTrackerUI() {
     lookingTimeEl = document.getElementById("lookingTime");
     awayTimeEl = document.getElementById("awayTime");
     focusScoreEl = document.getElementById("focusScore");
+    petFrame = document.getElementById("focusPet");
 
     if (startBtn) startBtn.addEventListener('click', startSession);
     if (stopBtn) stopBtn.addEventListener('click', stopSession);

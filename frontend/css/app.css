@@ -1,39 +1,162 @@
 /* frontend/css/app.css */
 
 .app-view {
-    padding: 24px;
-    min-height: calc(100vh - 72px);
+    height: 90vh;
+    width: 100%;
+    background: #BBE5D6;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.container {
+    width: 90%;
+    max-width: 1100px;
+    height: 80%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.app-left {
+    flex: 0 0 420px;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    gap: 14px;
+    padding-left: 60px;
 }
 
-.app-header {
-    width: 100%;
-    max-width: 700px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-/* .app-title {
-    font-size: 28px;
-    font-weight: 700;
+.app-title {
+    font-size: 48px;
+    font-weight: 800;
+    color: #111111;
     margin: 0;
-} */
-
-.logout-btn {
-    padding: 8px 12px;
-    border-radius: 8px;
-    border: none;
-    background: #ef4444;
-    color: white;
-    font-weight: 600;
-    display: none;
-    cursor: pointer;
+    letter-spacing: 0.01em;
 }
 
-.logout-btn:hover {
-    opacity: 0.9;
+.app-subtitle {
+    margin: 0;
+    font-size: 18px;
+    color: #6b7280;
+}
+
+.status-display {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.state-indicator {
+    font-size: 18px;
+}
+
+.state-text {
+    font-size: 40px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #111827;
+}
+
+.state-looking {
+    color: #059669;
+}
+
+.state-away {
+    color: #DC2626;
+}
+
+.timer-label {
+    margin-top: 6px;
+    font-size: 16px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #9ca3af;
+}
+
+.timer {
+    font-size: 40px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+}
+
+.controls {
+    margin-top: 18px;
+    display: flex;
+    gap: 12px;
+}
+
+.btn-start,
+.btn-stop {
+    min-width: 150px;
+    padding: 12px 0;
+    border-radius: 25px;
+    border: none;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+    color: #ffffff;
+}
+
+.btn-start {
+    background: #71d7ac;
+}
+
+.btn-stop {
+    background: #f97373;
+    opacity: 0.85;
+}
+
+.btn-start:hover,
+.btn-stop:hover:not(:disabled) {
+    transform: scale(1.03);
+    opacity: 0.95;
+}
+
+.btn-stop:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.stats {
+    margin-top: 22px;
+    display: flex;
+    gap: 32px;
+}
+
+.stat-item {
+    text-align: left;
+}
+
+.stat-value {
+    font-size: 22px;
+    font-weight: 800;
+    color: #065f46;
+}
+
+.stat-label {
+    font-size: 18px;
+    color: #6b7280;
+    margin-top: 2px;
+}
+
+.app-right {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+}
+
+.husky-iframe {
+    /* width: 380px; */
+    max-width: 100%;
+    height: 750px;
+    border: none;
+    background: transparent;
+    overflow: hidden;
+    display: block;
 }
