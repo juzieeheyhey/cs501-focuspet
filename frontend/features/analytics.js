@@ -114,17 +114,24 @@ function renderRecentSessionsList(containerEl, recentSessions) {
 
         const row = document.createElement("div");
         row.className = "session-item";
-        let emoji = "🙂"; // default
+
+        // default
+        let emoji = "🙂";
+        let bgColor = "#fef3c7";
+
         if (focusScore > 80) {
             emoji = "😄";
+            bgColor = "#d1fae5";
         } else if (focusScore >= 40) {
             emoji = "😐";
+            bgColor = "#fef3c7";
         } else {
             emoji = "😢";
+            bgColor = "#fee2e2";
         }
         row.innerHTML = `
             <div class="session-left">
-                <div class="session-emoji">${emoji}</div>
+                <div class="session-emoji" style="background:${bgColor}">${emoji}</div>
                 <div class="session-text">
                     <div class="session-when">${title}</div>
                     <div class="session-duration">${durationText}</div>
