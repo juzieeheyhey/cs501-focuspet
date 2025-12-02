@@ -5,6 +5,24 @@ import { spawn } from 'child_process';
 import fs from 'fs';
 
 let HOST_BINARY;
+// Track spawned native child processes so we can cleanly terminate them on exit
+const childProcs = new Set();
+
+// Prevent multiple app instances (keep a single instance running)
+const gotLock = app.requestSingleInstanceLock();
+if (!gotLock) {
+    console.warn('Another instance is already running — exiting this instance.');
+    app.quit();
+}
+else {
+    app.on('second-instance', (_event, _argv, _cwd) => {
+        // Someone tried to start a second instance — focus the existing window
+        if (mainWindow) {
+            if (mainWindow.isMinimized()) mainWindow.restore();
+            mainWindow.focus();
+        }
+    });
+}
 
 function resolveHostBinary() {
     const isDev = !app.isPackaged;
@@ -36,7 +54,13 @@ console.log("Native Host path:", HOST_BINARY);
 ipcMain.handle("native:send", async (_event, payload) => {
     return new Promise((resolve, reject) => {
         try {
-            const proc = spawn(HOST_BINARY, [], { stdio: ["pipe", "pipe", "ignore"] });
+            const proc = spawn(HOST_BINARY, [], { stdio: ["pipe", "pipe", "ignore"], detached: false });
+            childProcs.add(proc);
+
+            // Safety: ensure native process doesn't hang forever
+            const killTimer = setTimeout(() => {
+                try { proc.kill(); } catch (e) { /* ignore */ }
+            }, 30_000);
 
             const json = Buffer.from(JSON.stringify(payload));
             const header = Buffer.alloc(4);
@@ -59,6 +83,8 @@ ipcMain.handle("native:send", async (_event, payload) => {
             });
 
             proc.on("close", (code) => {
+                clearTimeout(killTimer);
+                childProcs.delete(proc);
                 if (!resolved) {
                     code === 0 ? resolve(true) : reject(new Error(`Native host exit ${code}`));
                 }
@@ -121,7 +147,8 @@ function createWindow() {
     mainWindow.on('closed', () => {
         mainWindow = null;
         // Quit the app entirely (this ensures the process terminates)
-        app.quit();
+        // On macOS we still quit here to ensure standalone app exits when window closed.
+        try { app.quit(); } catch (e) { /* ignore */ }
     });
 
 
@@ -203,6 +230,30 @@ function createWindow() {
 
 
 app.whenReady().then(createWindow);
+
+// Graceful cleanup: stop intervals and kill any spawned child processes
+function gracefulShutdown() {
+    try {
+        if (activeWinInterval) {
+            clearInterval(activeWinInterval);
+            activeWinInterval = null;
+        }
+    } catch (e) { /* ignore */ }
+    try {
+        for (const p of childProcs) {
+            try { p.kill(); } catch (e) { /* ignore */ }
+        }
+        childProcs.clear();
+    } catch (e) { /* ignore */ }
+}
+
+app.on('before-quit', () => {
+    gracefulShutdown();
+});
+
+// Also handle signals in case the process is terminated externally
+process.on('SIGINT', () => { gracefulShutdown(); process.exit(0); });
+process.on('SIGTERM', () => { gracefulShutdown(); process.exit(0); });
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
