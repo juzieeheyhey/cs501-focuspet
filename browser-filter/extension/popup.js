@@ -109,8 +109,32 @@ async function init() {
     }
 
     // Toggle indicator
-    session.addEventListener("change", () => {
-        statusDot.classList.toggle("active", session.checked);
+    session.addEventListener("change", async () => {
+        // Persist session state and tell the service worker to apply/clear rules
+        const isOn = !!session.checked;
+        statusDot.classList.toggle("active", isOn);
+        try {
+            // persist
+            await chrome.storage.local.set({ sessionOn: isOn });
+            // read current lists from storage to send to SW
+            const stored = await chrome.storage.local.get({ allowlist: [], blacklist: [] });
+            const allow = stored?.allowlist || [];
+            const block = stored?.blacklist || [];
+            if (isOn) {
+                // send lists to SW to apply immediately
+                try {
+                    await chrome.runtime.sendMessage({ type: 'APPLY', payload: { allowlist: allow, blacklist: block, sessionOn: true } });
+                } catch (err) {
+                    console.warn('session change: failed to message SW, will rely on storage-based apply', err);
+                    try { await chrome.runtime.sendMessage({ type: 'APPLY' }); } catch (_) { }
+                }
+            } else {
+                // turn off rules
+                try { await chrome.runtime.sendMessage({ type: 'CLEAR' }); } catch (err) { console.warn('session change: CLEAR failed', err); }
+            }
+        } catch (err) {
+            console.error('session change handler error', err);
+        }
     });
 
     // Reload (fetch from backend)
@@ -187,14 +211,31 @@ async function syncFromBackend() {
         const block = json?.BlackList || json?.blackList || [];
         console.log('syncFromBackend: parsed lists', { allow, block });
 
-        await chrome.storage.local.set({ allowlist: allow, blacklist: block, sessionOn: false });
+        // preserve any existing sessionOn state rather than forcing false
+        const prev = await chrome.storage.local.get(['sessionOn']);
+        const sessionOnStored = prev?.sessionOn ?? false;
+        await chrome.storage.local.set({ allowlist: allow, blacklist: block, sessionOn: sessionOnStored });
 
-        try { await chrome.runtime.sendMessage({ type: 'APPLY' }); } catch (_) { }
+        // Send the lists directly to the service worker so it can apply immediately
+        try {
+            await chrome.runtime.sendMessage({ type: 'APPLY', payload: { allowlist: allow, blacklist: block, sessionOn: sessionOnStored } });
+        } catch (err) {
+            console.warn('syncFromBackend: failed to message SW, will rely on storage-based apply', err);
+            try { await chrome.runtime.sendMessage({ type: 'APPLY' }); } catch (_) { }
+        }
 
         const wl = q('#wl');
         const bl = q('#bl');
         if (wl) { wl.value = allow.join('\n'); }
         if (bl) { bl.value = block.join('\n'); }
+
+        // reflect sessionOn in the popup UI
+        try {
+            const cur = await chrome.storage.local.get(['sessionOn']);
+            const curOn = !!cur?.sessionOn;
+            session.checked = curOn;
+            statusDot.classList.toggle('active', curOn);
+        } catch (err) { /* ignore */ }
 
         return true;
     } catch (e) {

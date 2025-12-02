@@ -120,6 +120,7 @@ async function setRules(allowlist, blacklist) {
         removeRuleIds: existing.map(r => r.id),
         addRules: toAdd
     });
+    console.log('setRules: applied rules', { added: toAdd.length, removed: existing.length });
 }
 
 async function clearRules() {
@@ -128,6 +129,7 @@ async function clearRules() {
         await chrome.declarativeNetRequest.updateDynamicRules({
             removeRuleIds: existing.map(r => r.id)
         });
+        console.log('clearRules: removed rules', { removed: existing.length });
     }
 }
 
@@ -223,10 +225,23 @@ async function pollActiveSession() {
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     (async () => {
         if (msg.type === "APPLY") {
-            // In the new model, Electron is the source of truth.
-            // We'll just re-apply whatever is already in storage.
-            await applyFromStorage();
-            sendResponse({ ok: true });
+            try {
+                console.log('SW: APPLY message received', { hasPayload: !!msg.payload });
+                if (msg.payload) {
+                    // If payload supplied, store it and apply immediately
+                    const { allowlist = [], blacklist = [], sessionOn = false } = msg.payload;
+                    console.log('SW: applying payload lists', { allowlistLen: allowlist.length, blacklistLen: blacklist.length, sessionOn });
+                    await chrome.storage.local.set({ allowlist, blacklist, sessionOn });
+                    if (sessionOn) await setRules(allowlist, blacklist); else await clearRules();
+                    sendResponse({ ok: true, applied: true });
+                } else {
+                    await applyFromStorage();
+                    sendResponse({ ok: true, applied: false });
+                }
+            } catch (err) {
+                console.error('SW: APPLY handler error', err);
+                sendResponse({ ok: false, error: String(err) });
+            }
         } else if (msg.type === "CLEAR") {
             await chrome.storage.local.set({ sessionOn: false });
             await clearRules();
