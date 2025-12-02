@@ -154,13 +154,17 @@ function createWindow() {
 
     function startActiveWindowPolling(ms = 1000) {
         if (activeWinInterval) return;
-        let prevOwnerName = null;
+    let prevOwnerName = null;
+    let prevUrl = null;
+    let prevTitle = null;
         // send initial state immediately
         (async () => {
             try {
                 const info = await activeWin();
                 const ownerName = info?.owner?.name || 'unknown';
                 prevOwnerName = ownerName;
+                prevUrl = info?.url ?? null;
+                prevTitle = info?.title ?? null;
                 if (info && mainWindow?.webContents) mainWindow.webContents.send('active-window', info);
             } catch (err) { /* ignore */ }
         })();
@@ -169,9 +173,13 @@ function createWindow() {
             try {
                 const info = await activeWin();
                 const ownerName = info?.owner?.name || 'unknown';
-                // Only forward when the active application changes to reduce noise
-                if (ownerName !== prevOwnerName) {
+                const url = info?.url ?? null;
+                const title = info?.title ?? null;
+                // Forward when the active application changes OR the URL/title changes (to catch intra-app navigation)
+                if (ownerName !== prevOwnerName || url !== prevUrl || title !== prevTitle) {
                     prevOwnerName = ownerName;
+                    prevUrl = url;
+                    prevTitle = title;
                     if (info && mainWindow?.webContents) {
                         mainWindow.webContents.send('active-window', info);
                     }

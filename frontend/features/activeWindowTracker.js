@@ -6,6 +6,9 @@ let lastActiveApp = null;
 let lastActiveTs = 0;
 let startTs = null;
 let running = false;
+let siteTimes = {};
+let lastActiveSite = null;
+let lastSiteTs = 0;
 
 export function initActiveWindowTracker() {
     try {
@@ -23,6 +26,46 @@ export function initActiveWindowTracker() {
                     lastActiveApp = appName;
                     lastActiveTs = now;
                 }
+
+                // --- site tracking for browsers ---
+                try {
+                    const owner = (info && info.owner && info.owner.name) ? String(info.owner.name) : '';
+                    const isBrowser = /chrome|chromium|safari|firefox|edge/i.test(owner);
+                    const url = info?.url || null;
+                    let hostname = null;
+                    if (isBrowser && url && typeof url === 'string') {
+                        try {
+                            const parsed = new URL(url);
+                            hostname = parsed.hostname;
+                        } catch (e) {
+                            // not a full url (maybe a title) — attempt to extract host-like token
+                            const m = String(url).match(/https?:\/\/([^/]+)/i);
+                            if (m) hostname = m[1];
+                        }
+                    }
+
+                    if (hostname) {
+                        if (lastActiveSite == null) {
+                            lastActiveSite = hostname;
+                            lastSiteTs = now;
+                        } else if (hostname !== lastActiveSite) {
+                            const sElapsed = now - lastSiteTs;
+                            siteTimes[lastActiveSite] = (siteTimes[lastActiveSite] || 0) + sElapsed;
+                            lastActiveSite = hostname;
+                            lastSiteTs = now;
+                        }
+                    } else {
+                        // if we switched away from a browser or lost URL, finalize site timer
+                        if (lastActiveSite != null) {
+                            const sElapsed = now - lastSiteTs;
+                            siteTimes[lastActiveSite] = (siteTimes[lastActiveSite] || 0) + sElapsed;
+                            lastActiveSite = null;
+                            lastSiteTs = 0;
+                        }
+                    }
+                } catch (e) {
+                    // best-effort; do not break app tracking
+                }
             });
         }
     } catch { }
@@ -32,6 +75,9 @@ export function startSessionTracking() {
     appTimes = {};
     lastActiveApp = null;
     lastActiveTs = Date.now();
+    siteTimes = {};
+    lastActiveSite = null;
+    lastSiteTs = Date.now();
     startTs = Date.now();
     running = true;
     try { window.electronAPI?.requestStartPolling?.(); } catch { }
@@ -45,8 +91,20 @@ export function stopSessionTracking() {
         const elapsedApp = endTs - lastActiveTs;
         appTimes[lastActiveApp] = (appTimes[lastActiveApp] || 0) + elapsedApp;
     }
+    // finalize site times
+    if (running && lastActiveSite != null) {
+        const elapsedSite = endTs - lastSiteTs;
+        siteTimes[lastActiveSite] = (siteTimes[lastActiveSite] || 0) + elapsedSite;
+    }
     running = false;
     try { window.electronAPI?.requestStopPolling?.(); } catch { }
+    // persist site times (best-effort) to storage so other parts can consume them
+    // import here to avoid circular import at module load time — use dynamic import Promise
+    import('./storage.js').then((storage) => {
+        try { storage.mergeSiteTotals(siteTimes); } catch (e) { /* ignore */ }
+        try { storage.saveLastSiteSession(siteTimes); } catch (e) { /* ignore */ }
+    }).catch(() => { /* ignore */ });
+
     return { ...appTimes };
 }
 

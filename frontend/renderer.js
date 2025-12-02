@@ -1,5 +1,6 @@
 import { initEyeTrackerUI } from './features/eyetracking.js';
 import { initAnalytics } from './features/analytics.js';
+import { formatMsToHMS } from './features/utils.js';
 // Backend base URL for auth calls. Update if your backend runs on a different port.
 const BACKEND_BASE = window.BACKEND_BASE || 'http://localhost:5000';
 
@@ -198,27 +199,22 @@ async function attachViewHandlers(name) {
 
 
     if (name === 'settings') {
-        // setNavVisible(true);
-
-        // panels: note the first .settings-panel is a profile/info panel, so
-        // whitelist is panels[1], blacklist is panels[2]
         const panels = Array.from(document.querySelectorAll('.settings-panel'));
         const wlPanel = panels[1];
         const blPanel = panels[2];
-
         const settingsLogoutBtn = document.getElementById('settingsLogoutBtn');
+        
         if (settingsLogoutBtn) settingsLogoutBtn.addEventListener('click', () => logout());
-
         if (!wlPanel || !blPanel) return;
 
         const wlInput = wlPanel.querySelector('.panel-input');
         const wlAdd = wlPanel.querySelector('.panel-add-btn');
         const wlList = wlPanel.querySelector('.website-list');
-
         const blInput = blPanel.querySelector('.panel-input');
         const blAdd = blPanel.querySelector('.panel-add-btn');
         const blList = blPanel.querySelector('.website-list');
 
+        // Read from localStorage
         function readStored() {
             try {
                 const allow = JSON.parse(localStorage.getItem('allowlist') || '[]');
@@ -229,72 +225,186 @@ async function attachViewHandlers(name) {
             }
         }
 
-        function saveStored(allow, block) {
-            localStorage.setItem('allowlist', JSON.stringify(allow));
-            localStorage.setItem('blacklist', JSON.stringify(block));
-            // notify native host (if present)
-            try {
-                if (window.electronAPI?.sendToChrome) {
-                    window.electronAPI.sendToChrome({ type: 'SET_FILTERS', payload: { allowlist: allow, blacklist: block, sessionOn: false } })
-                        .catch(() => { /* best-effort */ });
-                }
-            } catch { }
+        // Get Authorization header
+        function getAuthHeader() {
+            const token = localStorage.getItem('authToken');
+            if (!token) return null;
+            return token.startsWith('Bearer ') ? token : `Bearer ${token}`;
         }
 
+        // Save to localStorage, notify native host, and update backend
+        async function saveStored(allow, block) {
+            localStorage.setItem('allowlist', JSON.stringify(allow));
+            localStorage.setItem('blacklist', JSON.stringify(block));
+
+            // Notify native host (best-effort)
+            try {
+                if (window.electronAPI?.sendToChrome) {
+                    window.electronAPI.sendToChrome({
+                        type: 'SET_FILTERS',
+                        payload: { allowlist: allow, blacklist: block, sessionOn: false }
+                    }).catch(() => {});
+                }
+            } catch {}
+
+            // Update backend
+            try {
+                const auth = getAuthHeader();
+                if (!auth) {
+                    console.warn('saveStored: No auth token available');
+                    return;
+                }
+
+                const url = `${BACKEND_BASE.replace(/\/$/, '')}/api/users/lists`;
+                const resp = await fetch(url, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': auth
+                    },
+                    body: JSON.stringify({ 
+                        WhiteList: allow, 
+                        BlackList: block 
+                    })
+                });
+
+                if (!resp.ok) {
+                    const txt = await resp.text().catch(() => '');
+                    console.warn('saveStored: Backend update failed', resp.status, txt);
+                    if (resp.status === 401) {
+                        console.warn('saveStored: Auth failed - token may be invalid');
+                    }
+                } else {
+                    console.debug('saveStored: Backend lists updated successfully');
+                }
+            } catch (err) {
+                console.error('saveStored: Failed to persist to backend', err);
+            }
+        }
+
+        // Render list UI
         function renderList(arr, ul) {
             if (!ul) return;
             ul.innerHTML = '';
+            
             for (const item of arr) {
                 const li = document.createElement('li');
                 li.className = 'website-item';
+                
                 const text = document.createElement('span');
                 text.className = 'website-text';
                 text.textContent = item;
+                
                 const rem = document.createElement('button');
                 rem.className = 'website-remove';
                 rem.type = 'button';
                 rem.textContent = '✕';
                 rem.title = 'Remove';
-                rem.addEventListener('click', () => {
+                rem.addEventListener('click', async () => {
                     const s = readStored();
                     const target = (ul === wlList) ? s.allow : s.block;
                     const idx = target.indexOf(item);
+                    
                     if (idx >= 0) {
                         target.splice(idx, 1);
-                        saveStored(s.allow, s.block);
+                        await saveStored(s.allow, s.block);
                         renderList(s.allow, wlList);
                         renderList(s.block, blList);
                     }
                 });
+                
                 li.appendChild(text);
                 li.appendChild(rem);
                 ul.appendChild(li);
             }
         }
 
-        function addItemToList(val, listName) {
+        // Add item to list
+        async function addItemToList(val, listName) {
             const cleaned = (val || '').trim();
             if (!cleaned) return;
+
             const s = readStored();
             const target = listName === 'allow' ? s.allow : s.block;
+            
             if (target.includes(cleaned)) return;
+            
             target.push(cleaned);
-            saveStored(s.allow, s.block);
+            await saveStored(s.allow, s.block);
             renderList(s.allow, wlList);
             renderList(s.block, blList);
         }
 
-        if (wlAdd) wlAdd.addEventListener('click', () => { addItemToList(wlInput?.value, 'allow'); if (wlInput) wlInput.value = ''; });
-        if (blAdd) blAdd.addEventListener('click', () => { addItemToList(blInput?.value, 'block'); if (blInput) blInput.value = ''; });
+        // Add button handlers
+        if (wlAdd) wlAdd.addEventListener('click', async () => {
+            await addItemToList(wlInput?.value, 'allow');
+            if (wlInput) wlInput.value = '';
+        });
+        
+        if (blAdd) blAdd.addEventListener('click', async () => {
+            await addItemToList(blInput?.value, 'block');
+            if (blInput) blInput.value = '';
+        });
 
-        // also allow Enter key on inputs
-        if (wlInput) wlInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); wlAdd?.click(); } });
-        if (blInput) blInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); blAdd?.click(); } });
+        // Enter key handlers
+        if (wlInput) wlInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                wlAdd?.click();
+            }
+        });
+        
+        if (blInput) blInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                blAdd?.click();
+            }
+        });
 
-        // initial render
-        const stored = readStored();
-        renderList(stored.allow, wlList);
-        renderList(stored.block, blList);
+        // Fetch lists from backend and render
+        async function fetchAndRenderServerLists() {
+            try {
+                const auth = getAuthHeader();
+                if (!auth) return false;
+
+                const url = `${BACKEND_BASE.replace(/\/$/, '')}/api/users/lists`;
+                const resp = await fetch(url, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': auth
+                    }
+                });
+
+                if (!resp.ok) {
+                    console.warn('Failed to fetch server lists', resp.status);
+                    return false;
+                }
+
+                const json = await resp.json();
+                const allow = json?.whiteList || json?.WhiteList || [];
+                const block = json?.blackList || json?.BlackList || [];
+
+                localStorage.setItem('allowlist', JSON.stringify(allow));
+                localStorage.setItem('blacklist', JSON.stringify(block));
+                
+                renderList(allow, wlList);
+                renderList(block, blList);
+                return true;
+            } catch (err) {
+                console.error('fetchAndRenderServerLists error', err);
+                return false;
+            }
+        }
+
+        // Initial render: fetch from backend, fallback to localStorage
+        (async () => {
+            const ok = await fetchAndRenderServerLists();
+            if (!ok) {
+                const stored = readStored();
+                renderList(stored.allow, wlList);
+                renderList(stored.block, blList);
+            }
+        })();
     }
     if (name === 'signup') {
         // setNavVisible(false);
