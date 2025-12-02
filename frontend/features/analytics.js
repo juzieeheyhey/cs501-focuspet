@@ -114,9 +114,17 @@ function renderRecentSessionsList(containerEl, recentSessions) {
 
         const row = document.createElement("div");
         row.className = "session-item";
+        let emoji = "🙂"; // default
+        if (focusScore > 80) {
+            emoji = "😄";
+        } else if (focusScore >= 40) {
+            emoji = "😐";
+        } else {
+            emoji = "😢";
+        }
         row.innerHTML = `
             <div class="session-left">
-                <div class="session-emoji">🙂</div>
+                <div class="session-emoji">${emoji}</div>
                 <div class="session-text">
                     <div class="session-when">${title}</div>
                     <div class="session-duration">${durationText}</div>
