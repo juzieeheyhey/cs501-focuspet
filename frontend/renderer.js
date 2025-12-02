@@ -200,8 +200,8 @@ async function attachViewHandlers(name) {
 
     if (name === 'settings') {
         const panels = Array.from(document.querySelectorAll('.settings-panel'));
-        const wlPanel = panels[1];
-        const blPanel = panels[2];
+        const wlPanel = panels[0];
+        const blPanel = panels[1];
         const settingsLogoutBtn = document.getElementById('settingsLogoutBtn');
         
         if (settingsLogoutBtn) settingsLogoutBtn.addEventListener('click', () => logout());
