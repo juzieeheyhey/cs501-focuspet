@@ -237,16 +237,6 @@ async function attachViewHandlers(name) {
             localStorage.setItem('allowlist', JSON.stringify(allow));
             localStorage.setItem('blacklist', JSON.stringify(block));
 
-            // Notify native host (best-effort)
-            try {
-                if (window.electronAPI?.sendToChrome) {
-                    window.electronAPI.sendToChrome({
-                        type: 'SET_FILTERS',
-                        payload: { allowlist: allow, blacklist: block, sessionOn: false }
-                    }).catch(() => {});
-                }
-            } catch {}
-
             // Update backend
             try {
                 const auth = getAuthHeader();

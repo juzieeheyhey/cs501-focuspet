@@ -4,17 +4,6 @@ import { contextBridge, ipcRenderer } from 'electron';
 const BACKEND_BASE = process.env.BACKEND_BASE || 'http://localhost:5185';
 contextBridge.exposeInMainWorld('BACKEND_BASE', BACKEND_BASE);
 
-contextBridge.exposeInMainWorld('electronAPI', {
-    onActiveWindow: (cb) => {
-        ipcRenderer.on('active-window', (_event, info) => cb(info));
-    },
-    requestStartPolling: () => ipcRenderer.send('active-window-start'),
-    requestStopPolling: () => ipcRenderer.send('active-window-stop'),
-    invokeGetActiveWindow: () => ipcRenderer.invoke('get-active-window'),
-    // Expose a safe wrapper for sending native messages to the Chrome extension
-    sendToChrome: (payload) => ipcRenderer.invoke("native:send", payload),
-});
-
 contextBridge.exposeInMainWorld('lastSessionPopup', {
     open: (payload) => ipcRenderer.send('last-session-window:openWindow', payload),
     onLoad: (cb) => {

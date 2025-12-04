@@ -333,18 +333,6 @@ async function startSession() {
     startBtn.disabled = true;
     stopBtn.disabled = false;
     pauseBtn.disabled = false;
-
-    // Notify Chrome extension native host to enable filters for this session
-    try {
-        const allowlist = JSON.parse(localStorage.getItem('allowlist') || '[]');
-        const blacklist = JSON.parse(localStorage.getItem('blacklist') || '[]');
-        if (window.electronAPI?.sendToChrome) {
-            window.electronAPI.sendToChrome({
-                type: 'SET_FILTERS',
-                payload: { allowlist, blacklist, sessionOn: true }
-            }).catch((e) => console.warn('sendToChrome(SET_FILTERS start) failed', e));
-        }
-    } catch (e) { console.warn('failed to send SET_FILTERS on start', e); }
 }
 
 async function stopSession() {
@@ -419,18 +407,6 @@ async function stopSession() {
         const sessionId = created.id || created._id;
         console.log("Created session ID:", sessionId);
         openLastSessionModel(created, totals);
-
-        // Notify Chrome extension native host to disable filters (session ended)
-        try {
-            const allowlist = JSON.parse(localStorage.getItem('allowlist') || '[]');
-            const blacklist = JSON.parse(localStorage.getItem('blacklist') || '[]');
-            if (window.electronAPI?.sendToChrome) {
-                window.electronAPI.sendToChrome({
-                    type: 'SET_FILTERS',
-                    payload: { allowlist, blacklist, sessionOn: false }
-                }).catch((e) => console.warn('sendToChrome(SET_FILTERS end) failed', e));
-            }
-        } catch (e) { console.warn('failed to send SET_FILTERS on end', e); }
 
     } catch (err) {
         console.error("Failed to post session:", err);
