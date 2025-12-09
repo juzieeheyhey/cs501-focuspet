@@ -2,17 +2,25 @@
 <!-- show when logged in -->
 
 <div class="settings-view">
+    <h1 class="settings-title">Profile</h1>
     <div class="settings-card">
         <header class="settings-profile">
             <div class="settings-profile-left">
+                <div class="profile-avatar" id="profileAvatar"></div>
+
                 <div class="profile-text">
-                    <h2 class="profile-name">Profile</h2>
+                    <h2 class="profile-name" id="profileName"></h2>
+                    <p class="profile-email" id="profileEmail"></p>
                 </div>
             </div>
+            
+            <!-- Logout -->
+            <button id="settingsLogoutBtn" class="settings-logout" type="button">
+                Log Out
+            </button>
         </header>
 
         <section class="settings-main">
-            <!-- <div class="settings-panel"></div> -->
 
             <!-- whitelist -->
             <div class="settings-panel">
@@ -60,10 +68,5 @@
                 </ul>
             </div>
         </section>
-
-        <!-- Logout -->
-        <button id="settingsLogoutBtn" class="settings-logout" type="button">
-            Log Out
-        </button>
     </div>
 </div>

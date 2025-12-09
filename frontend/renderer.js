@@ -10,6 +10,7 @@ const PUBLIC_VIEWS = new Set(['home', 'auth', 'signup']);
 // update nav based on auth state
 function updateNav() {
     const token = localStorage.getItem('authToken');
+    // show/hide logged-in/logged-out nav items from html based on auth state
     const loggedOut = document.querySelector('.nav-logged-out');
     const loggedIn = document.querySelector('.nav-logged-in');
     if (loggedOut) loggedOut.style.display = token ? 'none' : 'flex';
@@ -21,10 +22,12 @@ function initNav() {
     const nav = document.querySelector('nav');
     if (!nav) return;
 
+    // delegate clicks
     nav.addEventListener('click', (e) => {
         const target = e.target;
-        if (!(target instanceof HTMLAnchorElement)) return;
+        if (!(target instanceof HTMLAnchorElement)) return;     // only handle anchor clicks
 
+        // get the view name from the data attribute
         const viewName = target.dataset.view;
         if (!viewName) return;
 
@@ -197,8 +200,33 @@ async function attachViewHandlers(name) {
         }
     }
 
-
     if (name === 'settings') {
+        const first = localStorage.getItem('firstName') || '';
+        const last = localStorage.getItem('lastName') || '';
+        const email = localStorage.getItem('email') || '';
+
+        const avatarEl = document.getElementById('profileAvatar');
+        const nameEl = document.getElementById('profileName');
+        const emailEl = document.getElementById('profileEmail');
+
+        // Render avatar initials
+        if (avatarEl) {
+            const initials =
+                (first.charAt(0) || '').toUpperCase() +
+                (last.charAt(0) || '').toUpperCase();
+            avatarEl.textContent = initials || "U";
+        }
+
+        // Render full name
+        if (nameEl) {
+            nameEl.textContent = `${first} ${last}`.trim() || "User";
+        }
+
+        // Render email under name
+        if (emailEl) {
+            emailEl.textContent = email || "";
+        }
+
         const panels = Array.from(document.querySelectorAll('.settings-panel'));
         const wlPanel = panels[0];
         const blPanel = panels[1];
@@ -396,21 +424,41 @@ async function attachViewHandlers(name) {
             }
         })();
     }
+
     if (name === 'signup') {
         // setNavVisible(false);
         const el = document.getElementById('signupMessage');
         const signupBtn = document.getElementById('signupBtn');
+
+        const firstNameInput = document.getElementById('signupFirstName');
+        const lastNameInput = document.getElementById('signupLastName');
         const emailInput = document.getElementById('signupEmail');
         const passwordInput = document.getElementById('signupPassword');
+        const confirmPasswordInput = document.getElementById('signupConfirmPassword');
 
         if (signupBtn) {
             signupBtn.addEventListener('click', async () => {
 
+                const firstName = firstNameInput?.value?.trim() || "";
+                const lastName = lastNameInput?.value?.trim() || "";
                 const email = emailInput?.value?.trim() || "";
                 const password = passwordInput?.value || "";
+                const confirmPassword = confirmPasswordInput?.value || "";
 
-                if (!email || !password) {
-                    el.textContent = "Please enter email and password";
+                // if (!email || !password) {
+                //     el.textContent = "Please enter email and password";
+                //     el.style.display = "block";
+                //     return;
+                // }
+
+                if (!firstName || !lastName || !email || !password || !confirmPassword) {
+                    el.textContent = "Please fill out all fields.";
+                    el.style.display = "block";
+                    el.style.color = "#dc2626";
+                    return;
+                }
+                if (password !== confirmPassword) {
+                    el.textContent = "Passwords do not match";
                     el.style.display = "block";
                     return;
                 }
@@ -419,7 +467,7 @@ async function attachViewHandlers(name) {
                 el.textContent = "";
                 el.style.display = "none";
 
-                const res = await attemptSignup(email, password);
+                const res = await attemptSignup(firstName, lastName, email, password, confirmPassword);
                 signupBtn.disabled = false;
 
                 if (res.success) {
@@ -430,6 +478,7 @@ async function attachViewHandlers(name) {
                 } else {
                     el.textContent = res.error;
                     el.style.display = "block";
+                    el.style.color = "#dc2626";
                 }
             });
         }
@@ -453,21 +502,32 @@ async function attemptLogin(email, password) {
         const resp = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ Email: email, PasswordHash: password }),
+            body: JSON.stringify({ Email: email, Password: password }),
         });
         if (!resp.ok) {
             const txt = await resp.text().catch(() => resp.statusText || 'Login failed');
             throw new Error(txt || 'Login failed');
         }
         const body = await resp.json();
+        console.log('LOGIN RESPONSE BODY:', body);
+
         if (body?.token) {
             localStorage.setItem('authToken', body.token);
             const decoded = parseJwt(body.token);
             if (decoded) {
                 localStorage.setItem('userId', decoded.userId); // store the userId in local storage for posting sessions & future use
-            } else {
-                console.warn('JWT decoded but no userId claim:', decoded);
             }
+
+            const u = body.user || {};
+
+            const first = u.firstName || '';
+            const last  = u.lastName || '';
+            const mail  = u.email || email; 
+
+            localStorage.setItem('firstName', first);
+            localStorage.setItem('lastName', last);
+            localStorage.setItem('email', mail);
+
             return { success: true };
         }
         throw new Error('Invalid response from server');
@@ -476,7 +536,7 @@ async function attemptLogin(email, password) {
     }
 }
 
-async function attemptSignup(email, password) {
+async function attemptSignup(firstName, lastName, email, password, confirmPassword) {
     const url = `${BACKEND_BASE}/api/auth/register`;
 
     try {
@@ -485,7 +545,10 @@ async function attemptSignup(email, password) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 Email: email,
-                Password: password
+                Password: password,
+                ConfirmPassword: confirmPassword,
+                FirstName: firstName,
+                LastName: lastName
             })
         });
 
@@ -595,16 +658,11 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // if (logoutBtn) {
-    //     logoutBtn.addEventListener('click', () => logout());
-    // }
 
     // Listen for active window updates from main (exposed via preload)
     if (window.electronAPI?.onActiveWindow) {
         window.electronAPI.onActiveWindow((info) => {
             console.log('Active window:', info);
-            // const el = document.getElementById('activeWindowTitle');
-            // if (el) el.textContent = info?.title || '—';
         });
     }
 });

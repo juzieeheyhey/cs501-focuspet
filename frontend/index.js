@@ -24,87 +24,12 @@ else {
     });
 }
 
-function resolveHostBinary() {
-    const isDev = !app.isPackaged;
-    const os = process.platform;
-    const arch = process.arch;
-
-    if (isDev) {
-        // Development binaries inside repo
-        if (os === "darwin") {
-            return arch === "arm64"
-                ? path.join(process.cwd(), "native/macos-arm64/focuspet-host")
-                : path.join(process.cwd(), "native/macos-x64/focuspet-host");
-        }
-        if (os === "win32") {
-            return path.join(process.cwd(), "native/win-x64/focuspet-host.exe");
-        }
-        return path.join(process.cwd(), "native/linux-x64/focuspet-host");
-    }
-
-    // Production: packaged into resources
-    if (os === "win32") {
-        return path.join(process.resourcesPath, "focuspet-host.exe");
-    }
-    return path.join(process.resourcesPath, "focuspet-host");
-}
-HOST_BINARY = resolveHostBinary();
-console.log("Native Host path:", HOST_BINARY);
-
-ipcMain.handle("native:send", async (_event, payload) => {
-    return new Promise((resolve, reject) => {
-        try {
-            const proc = spawn(HOST_BINARY, [], { stdio: ["pipe", "pipe", "ignore"], detached: false });
-            childProcs.add(proc);
-
-            // Safety: ensure native process doesn't hang forever
-            const killTimer = setTimeout(() => {
-                try { proc.kill(); } catch (e) { /* ignore */ }
-            }, 30_000);
-
-            const json = Buffer.from(JSON.stringify(payload));
-            const header = Buffer.alloc(4);
-            header.writeUInt32LE(json.length, 0);
-
-            let resolved = false;
-
-            proc.stdout.on("data", () => {
-                if (!resolved) {
-                    resolved = true;
-                    resolve(true);
-                }
-            });
-
-            proc.on("error", (err) => {
-                if (!resolved) {
-                    resolved = true;
-                    reject(err);
-                }
-            });
-
-            proc.on("close", (code) => {
-                clearTimeout(killTimer);
-                childProcs.delete(proc);
-                if (!resolved) {
-                    code === 0 ? resolve(true) : reject(new Error(`Native host exit ${code}`));
-                }
-            });
-
-            proc.stdin.write(header);
-            proc.stdin.write(json);
-            proc.stdin.end();
-        } catch (err) {
-            reject(err);
-        }
-    });
-});
-
-
 let mainWindow;
 let activeWinInterval = null;
 let lastSessionWindow = null;
 
 function createWindow() {
+    // Create the browser window.
     mainWindow = new BrowserWindow({
         width: 1200,
         height: 900,
@@ -117,7 +42,7 @@ function createWindow() {
         },
     });
 
-
+    // Set up security headers
     session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
         const headers = {
             ...details.responseHeaders,
@@ -136,39 +61,34 @@ function createWindow() {
     });
 
     mainWindow.loadFile(path.join(process.cwd(), 'index.html'));
-    // mainWindow.webContents.openDevTools(); // Open DevTools for debugging
 
-    // NOTE: active-win polling is controlled by renderer requests (start/stop).
-    // We do NOT start polling here so the renderer can request polling only when a session is active.
-
-    // On macOS the default is to keep the app running after the window is closed.
-    // If you want the app process to exit when the user clicks the red close button,
-    // call app.quit() when the window is closed.
+    // Call app.quit() when the window is closed.
     mainWindow.on('closed', () => {
         mainWindow = null;
-        // Quit the app entirely (this ensures the process terminates)
-        // On macOS we still quit here to ensure standalone app exits when window closed.
-        try { app.quit(); } catch (e) { /* ignore */ }
+        try { app.quit(); } catch (e) {}
     });
 
-
+    // Active window tracking via active-win
     function startActiveWindowPolling(ms = 1000) {
-        if (activeWinInterval) return;
-    let prevOwnerName = null;
-    let prevUrl = null;
-    let prevTitle = null;
+        if (activeWinInterval) return;  // already running
+        let prevOwnerName = null;
+        let prevUrl = null;
+        let prevTitle = null;
         // send initial state immediately
         (async () => {
             try {
+                // Get initial active window info
                 const info = await activeWin();
                 const ownerName = info?.owner?.name || 'unknown';
                 prevOwnerName = ownerName;
                 prevUrl = info?.url ?? null;
                 prevTitle = info?.title ?? null;
+                // if info is valid, send to renderer
                 if (info && mainWindow?.webContents) mainWindow.webContents.send('active-window', info);
-            } catch (err) { /* ignore */ }
+            } catch (err) { console.error('active-win error', err); }
         })();
 
+        // set up interval polling
         activeWinInterval = setInterval(async () => {
             try {
                 const info = await activeWin();
@@ -181,7 +101,7 @@ function createWindow() {
                     prevUrl = url;
                     prevTitle = title;
                     if (info && mainWindow?.webContents) {
-                        mainWindow.webContents.send('active-window', info);
+                        mainWindow.webContents.send('active-window', info);     // send new info to renderer
                     }
                 }
             } catch (err) {
@@ -191,17 +111,21 @@ function createWindow() {
     }
 
     function stopActiveWindowPolling() {
+        // Stop the active window polling interval and cleanup
         if (!activeWinInterval) return;
         clearInterval(activeWinInterval);
         activeWinInterval = null;
     }
 
+    // Function to open the last session popup window
     function openLastSessionWindow(payload) {
+        // If already open, just focus and update
         if (lastSessionWindow && !lastSessionWindow.isDestroyed()) {
-            lastSessionWindow.webContents.send('last-session-window', payload);
+            lastSessionWindow.webContents.send('last-session-window', payload); // update with new payload
             lastSessionWindow.focus();
             return;
         }
+        // define window for last session popup
         lastSessionWindow = new BrowserWindow({
             width: 420,
             height: 520,
@@ -216,16 +140,19 @@ function createWindow() {
                 nodeIntegration: false,
             },
         });
+        // cleanup for popup modal
         lastSessionWindow.on('closed', () => {
             lastSessionWindow = null;
         });
+        // load the HTML file and send payload
         lastSessionWindow.loadFile(path.join(process.cwd(), 'last-session.html'));
+        // wait for the window to finish loading then send payload
         lastSessionWindow.webContents.once('did-finish-load', () => {
             lastSessionWindow.webContents.send('last-session-window', payload);
         });
     }
-    // IPC controls (optional): allow renderer to start/stop or request one-shot
 
+    // IPC controls: allow renderer to start/stop
     ipcMain.on('active-window-start', () => startActiveWindowPolling());
     ipcMain.on('active-window-stop', () => stopActiveWindowPolling());
     ipcMain.handle('get-active-window', async () => {
@@ -246,17 +173,17 @@ function gracefulShutdown() {
             clearInterval(activeWinInterval);
             activeWinInterval = null;
         }
-    } catch (e) { /* ignore */ }
+    } catch (e) {}
     try {
         for (const p of childProcs) {
-            try { p.kill(); } catch (e) { /* ignore */ }
+            try { p.kill(); } catch (e) {}
         }
         childProcs.clear();
-    } catch (e) { /* ignore */ }
+    } catch (e) {}
 }
 
 app.on('before-quit', () => {
-    gracefulShutdown();
+    gracefulShutdown(); // call cleanup function
 });
 
 // Also handle signals in case the process is terminated externally
