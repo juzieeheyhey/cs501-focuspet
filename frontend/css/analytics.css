@@ -58,34 +58,33 @@
 /* left = activity card, right = recent session card */
 .activity-analytics {
     flex: 0 0 32%;
-    /* takes ~1/3 width */
+    /* ~1/3 width */
 }
 
 .recent-session {
     flex: 1;
-    /* takes remaining width */
+    /* remaining width */
 }
 
-/* Responsive: stack vertically */
-@media (max-width: 900px) {
-    .analytics-row {
-        flex-direction: column;
-    }
-
-    .activity-analytics,
-    .recent-session {
-        flex: 1 1 auto;
-    }
+/* charts row uses same flex row, but we want both charts equal width */
+.charts-row {
+    align-items: stretch;
 }
 
 /* ===== Card Shared Styles ===== */
 
 .activity-analytics,
-.recent-session {
+.recent-session,
+.chart-card {
     background: #ffffff;
     padding: 28px 32px 24px;
     border-radius: 24px;
     box-shadow: 0 18px 45px rgba(0, 0, 0, 0.06);
+}
+
+/* each chart card takes half of charts row */
+.chart-card {
+    flex: 1 1 0;
 }
 
 .card-header h2 {
@@ -214,4 +213,41 @@
     letter-spacing: 0.08em;
     color: #9ca3af;
     text-transform: uppercase;
+}
+
+/* ===== Charts ===== */
+
+.chart-body {
+    margin-top: 16px;
+}
+
+.chart-svg {
+    width: 100%;
+    height: 160px;
+}
+
+/* X-axis labels */
+.chart-x-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: 13px;
+    color: #4b5563;
+}
+
+/* Y-axis tick labels inside SVG */
+.chart-y-label {
+    font-size: 11px;
+    fill: #6b7280;
+}
+
+/* Area / bars */
+.chart-area {
+    fill: #e5e7eb;
+}
+
+.chart-bar {
+    fill: #000000;
+    rx: 6;
+    ry: 6;
 }
