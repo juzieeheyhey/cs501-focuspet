@@ -3,21 +3,53 @@
 
 <div class="analyticsView" id="analytics">
     <h1 class="analytics-title">Analytics Dashboard</h1>
+
+    <!-- ROW 1: Stats only -->
     <section class="analytics-overview">
-        <!-- <article class="pet-card"></article> -->
         <article class="stat-card">
             <div class="stat-value" id="avgFocusScore">--%</div>
             <div class="stat-label">Average Focus Score</div>
         </article>
+
         <article class="stat-card">
             <div class="stat-value" id="totalSessions">--</div>
             <div class="stat-label">Total Sessions</div>
         </article>
+
         <article class="stat-card">
             <div class="stat-value" id="currentStreak">--</div>
             <div class="stat-label">Current Streak</div>
         </article>
     </section>
+
+    <!-- ROW 2: Two charts side by side -->
+    <div class="analytics-row charts-row">
+        <!-- Weekly Focus Trend -->
+        <section class="chart-card">
+            <header class="card-header">
+                <h2 class="card-title">Weekly Focus Trend</h2>
+                <p class="card-subtitle">Average focus score by day</p>
+            </header>
+            <div class="chart-body">
+                <svg id="focusTrendSvg" class="chart-svg" viewBox="0 0 320 180" preserveAspectRatio="none"></svg>
+                <div class="chart-x-labels" id="focusTrendLabels"></div>
+            </div>
+        </section>
+
+        <!-- Sessions Per Day -->
+        <section class="chart-card">
+            <header class="card-header">
+                <h2 class="card-title">Sessions Per Day</h2>
+                <p class="card-subtitle">Number of focus sessions completed</p>
+            </header>
+            <div class="chart-body">
+                <svg id="sessionsPerDaySvg" class="chart-svg" viewBox="0 0 320 180" preserveAspectRatio="none"></svg>
+                <div class="chart-x-labels" id="sessionsPerDayLabels"></div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ROW 3: Activity card + Recent Sessions -->
     <div class="analytics-row">
         <!-- Left Card -->
         <section class="activity-analytics">
@@ -25,18 +57,16 @@
                 <h2>Screen Activity Analysis</h2>
                 <p class="card-subtitle">Time spent on applications this week</p>
             </header>
-            <ul class="activity-list" id="activityList">
-            </ul>
+            <ul class="activity-list" id="activityList"></ul>
         </section>
+
         <!-- Right Card -->
         <section class="recent-session">
             <header class="card-header">
                 <h2>Recent Sessions</h2>
                 <p class="card-subtitle">Your latest focus sessions</p>
             </header>
-            <ul class="session-list" id="recentSessionsList">
-                <!-- <li class="session-item">…</li> -->
-            </ul>
+            <ul class="session-list" id="recentSessionsList"></ul>
         </section>
     </div>
 </div>
