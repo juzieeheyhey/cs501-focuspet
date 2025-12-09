@@ -84,7 +84,7 @@ function getCurrentStreak(sessions) {
     return streak
 }
 
-function getRecentSessions(sessions, limit = 5) {
+function getRecentSessions(sessions, limit = 10) {
     if (!sessions || sessions.length === 0) return [];
     const sorted = [...sessions].sort(
         (a, b) => new Date(b.startTime) - new Date(a.startTime)
