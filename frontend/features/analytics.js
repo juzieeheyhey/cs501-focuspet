@@ -227,7 +227,7 @@ function renderActivityAnalytics(containerEl, activity) {
     });
 }
 
-/ ========== weekly charts helpers ========== /
+// Weekly Stats Helpers
 
 // Last 7 days (oldest → newest)
 function getLast7Days() {
@@ -250,7 +250,8 @@ function getLast7Days() {
 
 // Aggregate sessions into last-7-day buckets
 function computeWeeklyStats(sessions) {
-    const baseDays = getLast7Days();
+    const baseDays = getLast7Days();    // last 7 days
+    // initialize days with zeroed stats
     const days = baseDays.map(d => ({
         ...d,
         sessionCount: 0,
@@ -261,8 +262,9 @@ function computeWeeklyStats(sessions) {
 
     if (!sessions || sessions.length === 0) return days;
 
-    const byKey = new Map(days.map(d => [d.key, d]));
+    const byKey = new Map(days.map(d => [d.key, d]));   // key -> day object
 
+    // aggregate sessions into daily buckets
     for (const s of sessions) {
         if (!s.startTime) continue;
         const start = new Date(s.startTime);
@@ -280,7 +282,7 @@ function computeWeeklyStats(sessions) {
             day.scoreNum += 1;
         }
     }
-
+    // compute average scores for each day bucket
     for (const d of days) {
         d.avgScore = d.scoreNum > 0 ? d.scoreSum / d.scoreNum : 0;
     }
@@ -300,7 +302,7 @@ function renderXAxisLabels(containerId, days) {
     });
 }
 
-// ========== Weekly Focus Trend (area) ==========
+// Weekly Focus Trend (area)
 
 function renderWeeklyFocusTrend(days) {
     const svg = document.getElementById("focusTrendSvg");
@@ -336,8 +338,9 @@ function renderWeeklyFocusTrend(days) {
     const n = days.length;
     if (n === 0) return;
 
-    const stepX = innerWidth / (n - 1 || 1);
+    const stepX = innerWidth / (n - 1 || 1);    // avoid div by zero
 
+    // build area path for weekly focus trend graph
     let pathD = "";
     days.forEach((d, i) => {
         const x = paddingLeft + i * stepX;
@@ -347,19 +350,21 @@ function renderWeeklyFocusTrend(days) {
         else pathD += ` L ${x} ${y}`;
     });
 
+    // close the area path
     const lastX = paddingLeft + (n - 1) * stepX;
     const baseY = paddingTop + innerHeight;
     const firstX = paddingLeft;
 
     pathD += ` L ${lastX} ${baseY} L ${firstX} ${baseY} Z`;
 
+    // create SVG path element
     const area = document.createElementNS("http://www.w3.org/2000/svg", "path");
     area.setAttribute("d", pathD);
     area.setAttribute("class", "chart-area");
     svg.appendChild(area);
 }
 
-// ========== Sessions Per Day (bars) ==========
+// Sessions Per Day (bars)
 
 function renderSessionsPerDay(days) {
     const svg = document.getElementById("sessionsPerDaySvg");
@@ -367,6 +372,7 @@ function renderSessionsPerDay(days) {
 
     renderXAxisLabels("sessionsPerDayLabels", days);
 
+    // chart dimensions
     const width = 320;
     const height = 160;
     const paddingLeft = 32;
@@ -374,9 +380,11 @@ function renderSessionsPerDay(days) {
     const paddingTop = 8;
     const paddingBottom = 18;
 
+    // inner chart dimensions
     const innerWidth = width - paddingLeft - paddingRight;
     const innerHeight = height - paddingTop - paddingBottom;
 
+    // set SVG viewBox and clear existing content
     svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
     while (svg.firstChild) svg.removeChild(svg.firstChild);
 
@@ -390,6 +398,7 @@ function renderSessionsPerDay(days) {
         yTicks.push(Math.round(i * step));
     }
 
+    // render y-axis labels
     yTicks.forEach(val => {
         const ratio = maxCount === 0 ? 0 : val / maxCount;
         const y = paddingTop + innerHeight - ratio * innerHeight;
@@ -401,10 +410,12 @@ function renderSessionsPerDay(days) {
         svg.appendChild(label);
     });
 
+    // render bars
     const n = days.length;
     const barWidth = innerWidth / (n * 1.4);
     const stepX = innerWidth / n;
 
+    // render bars for each day
     days.forEach((d, i) => {
         const count = d.sessionCount || 0;
         const ratio = maxCount === 0 ? 0 : count / maxCount;

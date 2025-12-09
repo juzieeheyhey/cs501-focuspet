@@ -8,6 +8,7 @@ export async function startCamera({ width = 640, height = 480, preview = true } 
     v.srcObject = stream;
     await v.play();
 
+    // if preview flag, style and add to DOM (document object model)
     if (preview) {
         v.style.position = 'fixed';
         v.style.top = '16px';
@@ -25,6 +26,7 @@ export async function startCamera({ width = 640, height = 480, preview = true } 
     return v;
 }
 
+// stop and cleanup camera video element
 export function stopCamera(video) {
     if (!video) return;
     try {

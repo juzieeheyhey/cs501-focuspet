@@ -1,6 +1,6 @@
 import { initEyeTrackerUI } from './features/eyetracking.js';
 import { initAnalytics } from './features/analytics.js';
-import { formatMsToHMS } from './features/utils.js';
+
 // Backend base URL for auth calls. Update if your backend runs on a different port.
 const BACKEND_BASE = window.BACKEND_BASE || 'http://localhost:5000';
 
@@ -47,28 +47,6 @@ function initNav() {
 
 // Load and render small HTML view fragments from ./views/{name}.html into #root
 const viewCache = new Map();
-
-// function setNavVisible(visible) {
-//     const nav = document.getElementById('mainNav');
-//     if (!nav) return;
-//     nav.style.display = visible ? 'flex' : 'none';
-// }
-
-
-
-// function initNavBar() {
-//     const nav = document.getElementById('mainNav');
-//     if (!nav) return;
-
-//     const navLinks = nav.querySelectorAll('.nav-link[data-view]');
-//     navLinks.forEach(link => {
-//         link.addEventListener('click', async () => {
-//             const targetView = link.dataset.view;
-//             if (!targetView) return;
-//             await showView(targetView);
-//         });
-//     });
-// }
 
 async function showView(name) {
     const root = document.getElementById('root');
@@ -126,21 +104,24 @@ async function attachViewHandlers(name) {
         const emailInput = document.getElementById('emailInput');
         const passwordInput = document.getElementById('passwordInput');
 
+        // display auth messages function
         if (loginBtn) {
             loginBtn.addEventListener('click', async () => {
-                const email = emailInput?.value?.trim() || '';
-                const password = passwordInput?.value || '';
+                // gather input values
+                const email = emailInput?.value?.trim() || ''; // ensure email is trimmed
+                const password = passwordInput?.value?.trim() || ''; // ensure password is trimmed
+                // validation
                 if (!email || !password) {
                     showAuthMessage('Please enter email and password');
                     return;
                 }
                 loginBtn.disabled = true;
-                showAuthMessage('');
+                showAuthMessage('');    // clear previous messages
                 const res = await attemptLogin(email, password);
                 loginBtn.disabled = false;
                 if (res.success) {
-                    await showView('app');
-                    updateNav();
+                    await showView('app');  // redirect to app on success
+                    updateNav();            // update nav state
                 } else {
                     showAuthMessage(res.error || 'Login failed');
                 }
@@ -191,15 +172,15 @@ async function attachViewHandlers(name) {
         }
     }
 
+    // logout button in settings
     if (name === 'settings') {
-        // setNavVisible(true);
-
         const settingsLogoutBtn = document.getElementById('settingsLogoutBtn');
         if (settingsLogoutBtn) {
             settingsLogoutBtn.addEventListener('click', () => logout());
         }
     }
 
+    // settings view
     if (name === 'settings') {
         const first = localStorage.getItem('firstName') || '';
         const last = localStorage.getItem('lastName') || '';
@@ -227,14 +208,17 @@ async function attachViewHandlers(name) {
             emailEl.textContent = email || "";
         }
 
+        // list management
         const panels = Array.from(document.querySelectorAll('.settings-panel'));
         const wlPanel = panels[0];
         const blPanel = panels[1];
         const settingsLogoutBtn = document.getElementById('settingsLogoutBtn');
-        
+
+        // Logout button
         if (settingsLogoutBtn) settingsLogoutBtn.addEventListener('click', () => logout());
         if (!wlPanel || !blPanel) return;
 
+        // panel elements
         const wlInput = wlPanel.querySelector('.panel-input');
         const wlAdd = wlPanel.querySelector('.panel-add-btn');
         const wlList = wlPanel.querySelector('.website-list');
@@ -273,6 +257,7 @@ async function attachViewHandlers(name) {
                     return;
                 }
 
+                // PUT updated lists to backend
                 const url = `${BACKEND_BASE.replace(/\/$/, '')}/api/users/lists`;
                 const resp = await fetch(url, {
                     method: 'PUT',
@@ -286,6 +271,7 @@ async function attachViewHandlers(name) {
                     })
                 });
 
+                // handle response
                 if (!resp.ok) {
                     const txt = await resp.text().catch(() => '');
                     console.warn('saveStored: Backend update failed', resp.status, txt);
@@ -304,7 +290,8 @@ async function attachViewHandlers(name) {
         function renderList(arr, ul) {
             if (!ul) return;
             ul.innerHTML = '';
-            
+
+            // for each item, create a list element
             for (const item of arr) {
                 const li = document.createElement('li');
                 li.className = 'website-item';
@@ -342,13 +329,14 @@ async function attachViewHandlers(name) {
             const cleaned = (val || '').trim();
             if (!cleaned) return;
 
-            const s = readStored();
+            const s = readStored(); // current stored lists
             const target = listName === 'allow' ? s.allow : s.block;
             
-            if (target.includes(cleaned)) return;
+            if (target.includes(cleaned)) return;   // already present
             
-            target.push(cleaned);
-            await saveStored(s.allow, s.block);
+            target.push(cleaned);                   // add item
+            await saveStored(s.allow, s.block);     // persist changes
+            // render lists
             renderList(s.allow, wlList);
             renderList(s.block, blList);
         }
@@ -382,7 +370,7 @@ async function attachViewHandlers(name) {
         // Fetch lists from backend and render
         async function fetchAndRenderServerLists() {
             try {
-                const auth = getAuthHeader();
+                const auth = getAuthHeader();   // get auth header else return
                 if (!auth) return false;
 
                 const url = `${BACKEND_BASE.replace(/\/$/, '')}/api/users/lists`;
@@ -398,6 +386,7 @@ async function attachViewHandlers(name) {
                     return false;
                 }
 
+                // parse response for user whitelist and blacklist
                 const json = await resp.json();
                 const allow = json?.whiteList || json?.WhiteList || [];
                 const block = json?.blackList || json?.BlackList || [];
@@ -405,6 +394,7 @@ async function attachViewHandlers(name) {
                 localStorage.setItem('allowlist', JSON.stringify(allow));
                 localStorage.setItem('blacklist', JSON.stringify(block));
                 
+                // render lists
                 renderList(allow, wlList);
                 renderList(block, blList);
                 return true;
@@ -439,18 +429,14 @@ async function attachViewHandlers(name) {
         if (signupBtn) {
             signupBtn.addEventListener('click', async () => {
 
+                // gather input values
                 const firstName = firstNameInput?.value?.trim() || "";
                 const lastName = lastNameInput?.value?.trim() || "";
                 const email = emailInput?.value?.trim() || "";
                 const password = passwordInput?.value || "";
                 const confirmPassword = confirmPasswordInput?.value || "";
 
-                // if (!email || !password) {
-                //     el.textContent = "Please enter email and password";
-                //     el.style.display = "block";
-                //     return;
-                // }
-
+                // validate inputs
                 if (!firstName || !lastName || !email || !password || !confirmPassword) {
                     el.textContent = "Please fill out all fields.";
                     el.style.display = "block";
@@ -467,9 +453,11 @@ async function attachViewHandlers(name) {
                 el.textContent = "";
                 el.style.display = "none";
 
+                // attempt signup using api call
                 const res = await attemptSignup(firstName, lastName, email, password, confirmPassword);
                 signupBtn.disabled = false;
 
+                // is api call successful, show appropriate message and redirect
                 if (res.success) {
                     el.textContent = "Account created! Redirecting to login...";
                     el.style.display = "block";
@@ -486,6 +474,7 @@ async function attachViewHandlers(name) {
 
 }
 
+// Simple JWT parser to extract payload
 function parseJwt(token) {
     try {
         const base64 = token.split('.')[1];
@@ -511,6 +500,7 @@ async function attemptLogin(email, password) {
         const body = await resp.json();
         console.log('LOGIN RESPONSE BODY:', body);
 
+        // if request successful and received token, store it and user details
         if (body?.token) {
             localStorage.setItem('authToken', body.token);
             const decoded = parseJwt(body.token);
@@ -518,12 +508,15 @@ async function attemptLogin(email, password) {
                 localStorage.setItem('userId', decoded.userId); // store the userId in local storage for posting sessions & future use
             }
 
+            // also store user details
             const u = body.user || {};
 
+            // extract user details
             const first = u.firstName || '';
             const last  = u.lastName || '';
             const mail  = u.email || email; 
 
+            // store user details in localStorage
             localStorage.setItem('firstName', first);
             localStorage.setItem('lastName', last);
             localStorage.setItem('email', mail);
@@ -574,17 +567,6 @@ function showAuthMessage(msg) {
         el.style.display = msg ? 'block' : 'none';
     }
 }
-
-// function logout() {
-//     localStorage.removeItem('authToken');
-//     // teardown any running tracker UI (if needed)
-//     try { window.stopSession?.(); } catch { }
-//     showView('auth');
-//     const logoutBtn = document.getElementById('logoutBtn');
-//     if (logoutBtn) logoutBtn.style.display = 'none';
-//     // update nav to reflect logged-out state
-//     try { updateNav(); } catch (e) { /* ignore */ }
-// }
 
 function logout() {
     localStorage.removeItem('authToken');
@@ -649,6 +631,7 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Handle password input
     if (passwordInput) {
         passwordInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {

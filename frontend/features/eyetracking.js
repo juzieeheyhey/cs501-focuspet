@@ -328,13 +328,15 @@ async function startSession() {
     // Start UI timer
     timerInterval = setInterval(updateTimerUI, 250);
 
-    requestAnimationFrame(trackLoop);
+    requestAnimationFrame(trackLoop);   // start tracking loop
 
+    // disable/enable buttons
     startBtn.disabled = true;
     stopBtn.disabled = false;
     pauseBtn.disabled = false;
 }
 
+// stop the session
 async function stopSession() {
     if (!sessionActive) return;
     sessionActive = false;
@@ -351,10 +353,6 @@ async function stopSession() {
 
     // finalize current state's time
     const now = Date.now();
-    // const elapsed = now - stateStartTime;
-    // if (currentState === 'looking') lookingTimeTotal += elapsed;
-    // else if (currentState === 'away') awayTimeTotal += elapsed;
-
 
     // stop UI timer
     clearInterval(timerInterval);
@@ -384,13 +382,15 @@ async function stopSession() {
     startBtn.disabled = false;
     stopBtn.disabled = true;
 
-    setState('idle');
+    setState('idle');   // reset state
 
     try {
         const totals = JSON.parse(localStorage.getItem('lastSessionAppTimes') || '{}');
 
-        // const durationMinutes = (elapsed) / 60000;
-        const focusScore = lookingTimeTotal / (lookingTimeTotal + awayTimeTotal);
+        // prepare session data
+        const focusScore = lookingTimeTotal / (lookingTimeTotal + awayTimeTotal);   // focus score calculated based on looking vs away time
+        
+        // adjust total session time to exclude paused duration
         const sessionData = {
             userId: localStorage.getItem('userId'),
             startTime: new Date(sessionStartTime).toISOString(),
@@ -413,10 +413,11 @@ async function stopSession() {
     }
 }
 
+// pause the session
 function pauseSession() {
     if (!sessionActive || sessionPaused) return;
-    pauseSessionTracking();
-    const now = Date.now();
+    pauseSessionTracking();     // pause active-window tracking
+    const now = Date.now();     // current time
     sessionPaused = true;
     pausedAt = now;
 
@@ -432,12 +433,11 @@ function pauseSession() {
     stateStartTime = now;
 }
 
-
 function resumeSession() {
     if (!sessionActive || !sessionPaused) return;
-    resumeSessionTracking();
-    const now = Date.now();
-    const pausedThis = now - pausedAt;
+    resumeSessionTracking();    // resume active-window tracking
+    const now = Date.now();     // current time
+    const pausedThis = now - pausedAt;  // duration of this pause
 
     pausedDuration += pausedThis;  // keep session timer correct
 
@@ -515,37 +515,16 @@ export function initEyeTrackerUI() {
     } catch { }
 }
 
-// Renders app totals into the UI element `#appTotalsList` if present
-// export function renderAppTotals() {
-//     try {
-//         const el = document.getElementById('appTotalsList');
-//         if (!el) return;
-//         const totals = JSON.parse(localStorage.getItem('appTotals') || '{}');
-//         el.innerHTML = '';
-//         const entries = Object.entries(totals).sort((a, b) => b[1] - a[1]);
-//         if (entries.length === 0) {
-//             el.textContent = 'No data yet';
-//             return;
-//         }
-//         for (const [app, ms] of entries) {
-//             const li = document.createElement('li');
-//             const secs = Math.round(ms / 1000);
-//             li.textContent = `${app}: ${secs}s`;
-//             el.appendChild(li);
-//         }
-//     } catch (e) { console.error('renderAppTotals failed', e); }
-// }
-
 function formatMsToHMS(ms) {
     const s = Math.max(0, Math.floor((ms || 0) / 1000)); // total seconds
-    const h = Math.floor(s / 3600);
-    const m = Math.floor((s % 3600) / 60);
+    const h = Math.floor(s / 3600);         // hours
+    const m = Math.floor((s % 3600) / 60);  // minutes
     const sec = s % 60;
 
     // If you want only h/m (like before)
     if (h > 0) return `${h}h${m}m`;
     if (m > 0) return `${m}m`;
-    return `${sec}s`;
+    return `${sec}s`;   // seconds
 }
 
 
@@ -569,17 +548,18 @@ function openLastSessionModel(session, appTotals = {}) {
     console.log("totalMins: ", totalMins);
 
     // approximate focus minutes from score
-
     const focusScore = session.focusScore ?? 0;
     const focusTime = session.durationSession ?? 0;
 
-    if (totalTimeEl) totalTimeEl.textContent = formatMsToHMS(totalMins);
-    if (totalFocusTimeEl) totalFocusTimeEl.textContent = formatMsToHMS(focusTime);
+    // get session, total, and focus times
+    if (totalTimeEl) totalTimeEl.textContent = formatMsToHMS(totalMins);                
+    if (totalFocusTimeEl) totalFocusTimeEl.textContent = formatMsToHMS(focusTime);      
     if (focusScoreEl) focusScoreEl.textContent = focusScore;
 
+    // render activity list
     if (activityListEl) {
         activityListEl.innerHTML = '';
-        const entries = Object.entries(appTotals).sort((a, b) => b[1] - a[1]);
+        const entries = Object.entries(appTotals).sort((a, b) => b[1] - a[1]);  // sort by time spent descending
         if (entries.length === 0) {
             const li = document.createElement('li');
             li.innerHTML = '<span>No activity data</span>';
@@ -594,11 +574,13 @@ function openLastSessionModel(session, appTotals = {}) {
         }
     }
 
+    // show modal
     modal.classList.remove('hidden');
     const main = document.getElementById('appView');
     if (main) main.classList.add('blur');
 }
 
+// close last session modal
 function closeLastSessionModel() {
     const modal = document.getElementById('lastSessionModel');
     if (!modal) return;

@@ -12,27 +12,33 @@ let lastSiteTs = 0;
 
 export function initActiveWindowTracker() {
     try {
+        // subscribe to active window events from main process via preload
         if (window.electronAPI?.onActiveWindow) {
             window.electronAPI.onActiveWindow((info) => {
                 if (!running) return;
-                const appName = info?.owner?.name || 'unknown';
+                const appName = info?.owner?.name || 'unknown';     // get app name
+
+                // app tracking
                 const now = Date.now();
                 if (lastActiveApp == null) {
                     lastActiveApp = appName;
                     lastActiveTs = now;
                 } else if (appName !== lastActiveApp) {
+                    // finalize time for previous app
                     const elapsed = now - lastActiveTs;
                     appTimes[lastActiveApp] = (appTimes[lastActiveApp] || 0) + elapsed;
                     lastActiveApp = appName;
                     lastActiveTs = now;
                 }
 
-                // --- site tracking for browsers ---
+                // site tracking for browsers
                 try {
+                    // Get the browser's owner and URL information
                     const owner = (info && info.owner && info.owner.name) ? String(info.owner.name) : '';
                     const isBrowser = /chrome|chromium|safari|firefox|edge/i.test(owner);
                     const url = info?.url || null;
                     let hostname = null;
+                    // extract hostname from URL if possible
                     if (isBrowser && url && typeof url === 'string') {
                         try {
                             const parsed = new URL(url);
@@ -44,6 +50,7 @@ export function initActiveWindowTracker() {
                         }
                     }
 
+                    // accumulate site time
                     if (hostname) {
                         if (lastActiveSite == null) {
                             lastActiveSite = hostname;
@@ -63,14 +70,13 @@ export function initActiveWindowTracker() {
                             lastSiteTs = 0;
                         }
                     }
-                } catch (e) {
-                    // best-effort; do not break app tracking
-                }
+                } catch (e) {}
             });
         }
     } catch { }
 }
 
+// start session tracking
 export function startSessionTracking() {
     appTimes = {};
     lastActiveApp = null;
@@ -80,7 +86,7 @@ export function startSessionTracking() {
     lastSiteTs = Date.now();
     startTs = Date.now();
     running = true;
-    try { window.electronAPI?.requestStartPolling?.(); } catch { }
+    try { window.electronAPI?.requestStartPolling?.(); } catch { }  // ask main process to start active window polling
 }
 
 export function stopSessionTracking() {
@@ -119,6 +125,7 @@ export function getSessionTrackingTotals() {
     return { ...appTimes };
 }
 
+// pause session tracking
 export function pauseSessionTracking() {
     if (!running) return;
 
