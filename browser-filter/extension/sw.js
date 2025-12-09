@@ -1,27 +1,22 @@
-// sw.js — FocusPet Filter service worker
+// sw.js — FocusPet Filter service worker with soft blocking
 
-const HOST_NAME = "com.focuspet.host"; // must match your native host manifest "name"
+const HOST_NAME = "com.focuspet.host";
 const WL_PRIORITY = 1000;
 const BL_PRIORITY = 500;
 
 let nativePort = null;
 
-// ---------- Native messaging wiring ----------
-
+// Native messaging wiring 
 function connectNative() {
     if (nativePort) return;
 
     try {
         nativePort = chrome.runtime.connectNative(HOST_NAME);
-
         nativePort.onMessage.addListener(handleNativeMessage);
-
         nativePort.onDisconnect.addListener(() => {
             console.warn("Native host disconnected", chrome.runtime.lastError);
             nativePort = null;
         });
-
-        // Ask the host for current filters when we first connect
         nativePort.postMessage({ type: "GET_FILTERS" });
     } catch (e) {
         console.error("Failed to connect to native host:", e);
@@ -33,25 +28,90 @@ async function handleNativeMessage(msg) {
     if (!msg || !msg.type) return;
 
     if (msg.type === "FILTERS" || msg.type === "SET_FILTERS") {
-        // Both initial dump and updates use the same payload shape
         const { allowlist = [], blacklist = [], sessionOn = false } = msg.payload || {};
-
-        // Store for popup UI & debug
         await chrome.storage.local.set({ allowlist, blacklist, sessionOn });
 
-        // Apply or clear rules
         if (sessionOn) {
             await setRules(allowlist, blacklist);
         } else {
             await clearRules();
         }
     } else if (msg.type === "PING") {
-        // Optional, just to test connectivity
         nativePort?.postMessage({ type: "PONG" });
     }
 }
 
-// ---------- DNR helpers ----------
+// Check if URL matches any pattern in a list
+function matchesPattern(url, patterns) {
+    for (const pattern of patterns) {
+        const p = pattern.trim();
+        if (!p) continue;
+
+        if (p === "<all_urls>") return true;
+        
+        if (p.startsWith("re:/") && p.endsWith("/")) {
+            const regex = new RegExp(p.slice(3, -1));
+            if (regex.test(url)) return true;
+        } else {
+            // Simple domain matching
+            const domain = p.replace(/^https?:\/\//i, "").replace(/\/.*$/, "");
+            const urlObj = new URL(url);
+            if (urlObj.hostname === domain || urlObj.hostname.endsWith('.' + domain)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+// Check if navigation should be soft-blocked
+async function shouldSoftBlock(url, tabId) {
+    const { allowlist = [], blacklist = [], sessionOn = false } = 
+        await chrome.storage.local.get(['allowlist', 'blacklist', 'sessionOn']);
+    
+    if (!sessionOn) return false;
+
+    // Check if there's an active bypass for this tab
+    const bypassKey = `bypass_${tabId}`;
+    const { [bypassKey]: bypass } = await chrome.storage.session.get([bypassKey]);
+    if (bypass && Date.now() - bypass.timestamp < 60000) {
+        // Bypass is active for 60 seconds
+        await chrome.storage.session.remove([bypassKey]);
+        return false;
+    }
+
+    // If on blacklist, it will be hard-blocked by DNR rules
+    if (matchesPattern(url, blacklist)) return false;
+
+    // If on whitelist, allow without soft block
+    if (matchesPattern(url, allowlist)) return false;
+
+    // Not on whitelist and not on blacklist = soft block
+    return true;
+}
+
+// Intercept navigation and redirect to interstitial if needed
+chrome.webNavigation?.onBeforeNavigate.addListener(async (details) => {
+    if (details.frameId !== 0) return; // Only main frame
+    
+    const shouldBlock = await shouldSoftBlock(details.url, details.tabId);
+    if (shouldBlock) {
+        // Store the blocked URL in session storage so interstitial can access it
+        const storageKey = `blocked_url_${details.tabId}`;
+        await chrome.storage.session.set({
+            [storageKey]: {
+                url: details.url,
+                timestamp: Date.now()
+            }
+        });
+        
+        const interstitialUrl = chrome.runtime.getURL('interstitial.html') + 
+            '?tabId=' + details.tabId;
+        chrome.tabs.update(details.tabId, { url: interstitialUrl });
+    }
+});
+
+// DNR (Declarative Net Request) helpers - for hard blocking only
 
 function toConditions(pattern) {
     const p = pattern.trim();
@@ -76,6 +136,7 @@ function toConditions(pattern) {
     return [{ type: "regex", value: regex }];
 }
 
+// Create a DNR rule object
 function makeRuleBase(id, priority, actionType, condition) {
     const resourceTypes = [
         "main_frame", "sub_frame", "xmlhttprequest", "script", "image", "media",
@@ -104,11 +165,8 @@ async function setRules(allowlist, blacklist) {
     const toAdd = [];
     let nextId = 10000;
 
-    for (const pat of allowlist) {
-        for (const c of toConditions(pat)) {
-            toAdd.push(makeRuleBase(nextId++, WL_PRIORITY, "allow", c));
-        }
-    }
+    // Only add blacklist rules for DNR (hard blocks)
+    // Whitelist and soft blocks are handled via webNavigation
     for (const pat of blacklist) {
         for (const c of toConditions(pat)) {
             toAdd.push(makeRuleBase(nextId++, BL_PRIORITY, "block", c));
@@ -123,6 +181,7 @@ async function setRules(allowlist, blacklist) {
     console.log('setRules: applied rules', { added: toAdd.length, removed: existing.length });
 }
 
+// Clear all DNR rules
 async function clearRules() {
     const existing = await chrome.declarativeNetRequest.getDynamicRules();
     if (existing.length) {
@@ -133,6 +192,7 @@ async function clearRules() {
     }
 }
 
+// Apply rules from storage
 async function applyFromStorage() {
     const { allowlist = [], blacklist = [], sessionOn = false } =
         await chrome.storage.local.get({ allowlist: [], blacklist: [], sessionOn: false });
@@ -143,7 +203,7 @@ async function applyFromStorage() {
     }
 }
 
-// ---------- Existing auth/backend helpers (kept) ----------
+// Existing auth/backend helpers (kept)
 
 const BACKEND_BASE = 'http://localhost:5185';
 
@@ -165,12 +225,11 @@ async function backendFetch(path, opts = {}) {
     return res;
 }
 
-// ---------- Lifecycle & message handlers ----------
+// Lifecycle & message handlers
 
 chrome.runtime.onInstalled.addListener(() => {
     connectNative();
     applyFromStorage();
-    // start periodic polling for active sessions (server-driven sync)
     try { chrome.alarms.create('session-poll', { periodInMinutes: 1 }); } catch (e) { /* ignore */ }
     pollActiveSession().catch(() => { /* ignore */ });
 });
@@ -188,16 +247,11 @@ chrome.alarms?.onAlarm.addListener((alarm) => {
     }
 });
 
-// Poll the backend for any active session for the logged-in user. If found,
-// store allowlist/blacklist/sessionOn and apply the rules. This enables the
-// extension to learn about desktop-started sessions via the backend.
 async function pollActiveSession() {
     try {
-        // backendFetch already injects Authorization header from stored authToken
         const resp = await backendFetch('/api/session/active');
         if (!resp) return;
         if (resp.status === 204) {
-            // no active session
             await chrome.storage.local.set({ sessionOn: false });
             await clearRules();
             return;
@@ -208,17 +262,14 @@ async function pollActiveSession() {
             let sessionObj = null;
             try { sessionObj = JSON.parse(text); } catch { sessionObj = null; }
             if (sessionObj) {
-                // If backend stores lists on the user, try to read them; otherwise apply empty lists
                 const allowlist = sessionObj.activity?.allowlist || sessionObj.allowlist || [];
                 const blacklist = sessionObj.activity?.blacklist || sessionObj.blacklist || [];
-                // If sessionObj has StartTime and EndTime == MinValue, treat as active
                 await chrome.storage.local.set({ allowlist, blacklist, sessionOn: true });
                 await setRules(allowlist, blacklist);
             }
         }
     } catch (e) {
         // network/auth errors are expected sometimes
-        // console.warn('pollActiveSession error', e);
     }
 }
 
@@ -226,9 +277,10 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     (async () => {
         if (msg.type === "APPLY") {
             try {
+                // Apply filter lists from payload or storage
                 console.log('SW: APPLY message received', { hasPayload: !!msg.payload });
                 if (msg.payload) {
-                    // If payload supplied, store it and apply immediately
+                    // Apply filter lists from payload or storage
                     const { allowlist = [], blacklist = [], sessionOn = false } = msg.payload;
                     console.log('SW: applying payload lists', { allowlistLen: allowlist.length, blacklistLen: blacklist.length, sessionOn });
                     await chrome.storage.local.set({ allowlist, blacklist, sessionOn });
@@ -260,6 +312,14 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
             } catch (err) {
                 sendResponse({ ok: false, error: String(err) });
             }
+        } else if (msg.type === 'SET_BYPASS') {
+            // Allow the interstitial page to set a bypass token to visit site anyway
+            const { tabId } = msg;
+            const bypassKey = `bypass_${tabId}`;
+            await chrome.storage.session.set({
+                [bypassKey]: { timestamp: Date.now() }
+            });
+            sendResponse({ ok: true });
         }
     })();
     return true;

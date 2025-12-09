@@ -10,12 +10,13 @@ function parseJwt(token) {
     } catch { return null; }
 }
 
+// Attempt login with email and password, store token on success
 async function attemptLogin(email, password) {
     const url = `${BACKEND_BASE}/api/auth/login`;
     const resp = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ Email: email, PasswordHash: password })
+        body: JSON.stringify({ Email: email, Password: password })
     });
     if (!resp.ok) {
         const txt = await resp.text().catch(() => resp.statusText || 'Login failed');
@@ -24,6 +25,7 @@ async function attemptLogin(email, password) {
     const body = await resp.json();
     if (!body?.token) throw new Error('No token returned');
 
+    // Decode token to extract userId
     const decoded = parseJwt(body.token);
     const userId = decoded?.userId ?? decoded?.name ?? decoded?.sub ?? null;
     // Normalize token: strip leading "Bearer " if present, and trim
@@ -42,6 +44,7 @@ async function doLogout() {
 
 document.addEventListener("DOMContentLoaded", init);
 
+// Initialize the popup UI
 async function init() {
     const wl = q("#wl");
     const bl = q("#bl");
@@ -73,6 +76,7 @@ async function init() {
     const items = await chrome.storage.local.get(['authToken']);
     const authToken = items?.authToken;
 
+    // UI state functions
     const features = q('#features');
     const authSection = q('#authSection');
 
@@ -224,6 +228,7 @@ async function syncFromBackend() {
             try { await chrome.runtime.sendMessage({ type: 'APPLY' }); } catch (_) { }
         }
 
+        // update the textarea values
         const wl = q('#wl');
         const bl = q('#bl');
         if (wl) { wl.value = allow.join('\n'); }

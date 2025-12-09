@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Focus Check</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            margin-top: 0;
+            font-size: 24px;
+        }
+        .url-display {
+            background: #f5f5f5;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 20px 0;
+            word-break: break-all;
+            font-size: 14px;
+            color: #666;
+        }
+        .message {
+            color: #555;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        .buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        button {
+            padding: 14px 32px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        .proceed-btn {
+            background: #667eea;
+            color: white;
+        }
+        .proceed-btn:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+        }
+        .proceed-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🐾 Focus Check</h1>
+        <p class="message">
+            This site is not on your focus whitelist. Are you sure you want to visit it?
+        </p>
+        <div class="url-display" id="targetUrl">Loading...</div>
+        <div class="buttons">
+            <button class="proceed-btn" id="proceedBtn">Continue Anyway</button>
+        </div>
+    </div>
+
+    <script src="interstitial.js"></script>
+</body>
+</html><!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Focus Check</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            margin-top: 0;
+            font-size: 24px;
+        }
+        .url-display {
+            background: #f5f5f5;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 20px 0;
+            word-break: break-all;
+            font-size: 14px;
+            color: #666;
+        }
+        .message {
+            color: #555;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        .buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        button {
+            padding: 14px 32px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        .proceed-btn {
+            background: #667eea;
+            color: white;
+        }
+        .proceed-btn:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+        }
+        .proceed-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+    </style>
+</head>
+<!-- <body>
+    <div class="container">
+        <h1>🐾 Focus Check</h1>
+        <p class="message">
+            This site is not on your focus whitelist. Are you sure you want to visit it?
+        </p>
+        <div class="url-display" id="targetUrl"></div>
+        <div class="buttons">
+            <button class="proceed-btn" id="proceedBtn">Continue Anyway</button>
+        </div>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const tabId = parseInt(params.get('tabId'), 10);
+        
+        let targetUrl = null;
+        
+        // Load the blocked URL from storage
+        (async () => {
+            const storageKey = `blocked_url_${tabId}`;
+            const result = await chrome.storage.session.get([storageKey]);
+            
+            if (result[storageKey]) {
+                targetUrl = result[storageKey].url;
+                document.getElementById('targetUrl').textContent = targetUrl;
+            } else {
+                document.getElementById('targetUrl').textContent = 'URL not found';
+            }
+        })();
+
+        const proceedBtn = document.getElementById('proceedBtn');
+        
+        proceedBtn.addEventListener('click', async () => {
+            if (!targetUrl || !tabId) {
+                console.error('Missing URL or tabId', { targetUrl, tabId });
+                alert('Unable to proceed - URL not found');
+                return;
+            }
+            
+            try {
+                // Disable button to prevent double-clicks
+                proceedBtn.disabled = true;
+                proceedBtn.textContent = 'Redirecting...';
+                
+                // Tell the service worker to set a bypass for this tab
+                await chrome.runtime.sendMessage({ 
+                    type: 'SET_BYPASS', 
+                    tabId: tabId 
+                });
+                
+                console.log('Bypass set, redirecting to:', targetUrl);
+                
+                // Clean up the stored URL
+                const storageKey = `blocked_url_${tabId}`;
+                await chrome.storage.session.remove([storageKey]);
+                
+                // Use chrome.tabs.update to ensure proper navigation
+                await chrome.tabs.update(tabId, { url: targetUrl });
+            } catch (error) {
+                console.error('Error during proceed:', error);
+                proceedBtn.disabled = false;
+                proceedBtn.textContent = 'Continue Anyway';
+                alert('Failed to proceed. Please try again.');
+            }
+        });
+    </script>
+</body> -->
+</html>

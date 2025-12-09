@@ -44,6 +44,7 @@ namespace FocusBackend.Controllers
     {
       if (dto == null) return BadRequest();
 
+      // Map DTO to Session entity
       var session = new Session
       {
         UserId = dto.UserId,
@@ -86,6 +87,7 @@ namespace FocusBackend.Controllers
         return BadRequest("Invalid userId format");
       }
 
+      // Find all sessions for the given userId
       var filter = Builders<Session>.Filter.Eq("UserId", userId);
       var sessions = await _ctx.Sessions.Find(filter).ToListAsync();
       return Ok(sessions);

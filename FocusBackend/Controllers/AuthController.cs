@@ -28,13 +28,28 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest req)
     {
+        // validate required fields
+        if (string.IsNullOrWhiteSpace(req.Email) ||
+            string.IsNullOrWhiteSpace(req.Password) ||
+            string.IsNullOrWhiteSpace(req.ConfirmPassword) ||
+            string.IsNullOrWhiteSpace(req.FirstName) ||
+            string.IsNullOrWhiteSpace(req.LastName))
+        {
+            return BadRequest("Please fill in all required fields.");
+        }
+        // check if passwords match
+        if (req.Password != req.ConfirmPassword)
+            return BadRequest("Passwords do not match");
+
         if (await _ctx.Users.Find(u => u.Email == req.Email).AnyAsync())
             return BadRequest("Email already registered");
 
         var user = new User
         {
             Email = req.Email,
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password)
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.Password),
+            FirstName = req.FirstName,
+            LastName = req.LastName
         };
 
         await _ctx.Users.InsertOneAsync(user);
@@ -43,18 +58,32 @@ public class AuthController : ControllerBase
 
 
     [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] User creds)
+    public async Task<IActionResult> Login([FromBody] LoginRequest req)
     {
-        var user = await _ctx.Users.Find(u => u.Email == creds.Email).FirstOrDefaultAsync();
-        if (user == null || !BCrypt.Net.BCrypt.Verify(creds.PasswordHash, user.PasswordHash))
+        var user = await _ctx.Users.Find(u => u.Email == req.Email).FirstOrDefaultAsync();
+
+        if (user == null || !BCrypt.Net.BCrypt.Verify(req.Password, user.PasswordHash))
             return Unauthorized("Invalid credentials");
 
         var token = GenerateJwt(user);
-        return Ok(new { token });
+
+        return Ok(new 
+        { 
+            token,
+            user = new
+            {
+                id = user.Id,
+                email = user.Email,
+                firstName = user.FirstName,
+                lastName = user.LastName,
+                initials = user.Initials
+            }
+        });
     }
 
     private string GenerateJwt(User user)
     {
+        // generate JWT token and sign it
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 

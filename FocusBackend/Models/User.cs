@@ -12,6 +12,15 @@ public class User
 
     public string Email { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+
+    // not stored in the database
+    [BsonIgnore]
+    public string Initials =>
+        $"{(string.IsNullOrEmpty(FirstName) ? "" : FirstName[0])}" +
+        $"{(string.IsNullOrEmpty(LastName) ? "" : LastName[0])}".ToUpper();
+
     public string[] WhiteList { get; set; } = [];
     public string[] BlackList { get; set; } = [];
 }

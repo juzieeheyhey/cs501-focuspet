@@ -5,8 +5,9 @@
     "description": "Whitelist/Blacklist web filter with session toggle.",
     "permissions": [
         "declarativeNetRequest",
-        "nativeMessaging",
+        "declarativeNetRequestWithHostAccess", 
         "storage",
+        "webNavigation",
         "tabs"
     ],
     "host_permissions": [
