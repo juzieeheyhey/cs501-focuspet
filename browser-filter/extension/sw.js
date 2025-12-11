@@ -4,43 +4,6 @@ const HOST_NAME = "com.focuspet.host";
 const WL_PRIORITY = 1000;
 const BL_PRIORITY = 500;
 
-let nativePort = null;
-
-// Native messaging wiring 
-function connectNative() {
-    if (nativePort) return;
-
-    try {
-        nativePort = chrome.runtime.connectNative(HOST_NAME);
-        nativePort.onMessage.addListener(handleNativeMessage);
-        nativePort.onDisconnect.addListener(() => {
-            console.warn("Native host disconnected", chrome.runtime.lastError);
-            nativePort = null;
-        });
-        nativePort.postMessage({ type: "GET_FILTERS" });
-    } catch (e) {
-        console.error("Failed to connect to native host:", e);
-        nativePort = null;
-    }
-}
-
-async function handleNativeMessage(msg) {
-    if (!msg || !msg.type) return;
-
-    if (msg.type === "FILTERS" || msg.type === "SET_FILTERS") {
-        const { allowlist = [], blacklist = [], sessionOn = false } = msg.payload || {};
-        await chrome.storage.local.set({ allowlist, blacklist, sessionOn });
-
-        if (sessionOn) {
-            await setRules(allowlist, blacklist);
-        } else {
-            await clearRules();
-        }
-    } else if (msg.type === "PING") {
-        nativePort?.postMessage({ type: "PONG" });
-    }
-}
-
 // Check if URL matches any pattern in a list
 function matchesPattern(url, patterns) {
     for (const pattern of patterns) {
@@ -49,6 +12,7 @@ function matchesPattern(url, patterns) {
 
         if (p === "<all_urls>") return true;
         
+        // Regex pattern for matching URLs
         if (p.startsWith("re:/") && p.endsWith("/")) {
             const regex = new RegExp(p.slice(3, -1));
             if (regex.test(url)) return true;
@@ -228,14 +192,12 @@ async function backendFetch(path, opts = {}) {
 // Lifecycle & message handlers
 
 chrome.runtime.onInstalled.addListener(() => {
-    connectNative();
     applyFromStorage();
     try { chrome.alarms.create('session-poll', { periodInMinutes: 1 }); } catch (e) { /* ignore */ }
     pollActiveSession().catch(() => { /* ignore */ });
 });
 
 chrome.runtime.onStartup?.addListener(() => {
-    connectNative();
     applyFromStorage();
     try { chrome.alarms.create('session-poll', { periodInMinutes: 1 }); } catch (e) { /* ignore */ }
     pollActiveSession().catch(() => { /* ignore */ });

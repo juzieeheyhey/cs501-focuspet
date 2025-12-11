@@ -19,12 +19,14 @@ public class AuthController : ControllerBase
     private readonly MongoContext _ctx;
     private readonly IConfiguration _config;
 
+    // Constructor to inject dependencies
     public AuthController(MongoContext ctx, IConfiguration config)
     {
         _ctx = ctx;
         _config = config;
     }
 
+    // POST: api/auth/register
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest req)
     {
@@ -41,9 +43,11 @@ public class AuthController : ControllerBase
         if (req.Password != req.ConfirmPassword)
             return BadRequest("Passwords do not match");
 
+        // check if email already registered
         if (await _ctx.Users.Find(u => u.Email == req.Email).AnyAsync())
             return BadRequest("Email already registered");
 
+        // create new user and hash password
         var user = new User
         {
             Email = req.Email,
@@ -52,21 +56,26 @@ public class AuthController : ControllerBase
             LastName = req.LastName
         };
 
+        // save user to database
         await _ctx.Users.InsertOneAsync(user);
         return Ok("Registered successfully");
     }
 
-
+    // POST: api/auth/login
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest req)
     {
+        // find user by email
         var user = await _ctx.Users.Find(u => u.Email == req.Email).FirstOrDefaultAsync();
 
+        // verify password
         if (user == null || !BCrypt.Net.BCrypt.Verify(req.Password, user.PasswordHash))
             return Unauthorized("Invalid credentials");
 
+        // generate JWT token
         var token = GenerateJwt(user);
 
+        // return token and user info
         return Ok(new 
         { 
             token,
@@ -81,6 +90,7 @@ public class AuthController : ControllerBase
         });
     }
 
+    // Helper method to generate JWT token
     private string GenerateJwt(User user)
     {
         // generate JWT token and sign it
