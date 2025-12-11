@@ -15,7 +15,7 @@ public class User
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
 
-    // not stored in the database
+    // mapping for initials not stored in the database
     [BsonIgnore]
     public string Initials =>
         $"{(string.IsNullOrEmpty(FirstName) ? "" : FirstName[0])}" +
