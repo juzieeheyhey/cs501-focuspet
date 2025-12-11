@@ -4,9 +4,6 @@ namespace FocusBackend.Extensions;
 
 public static class ClaimsPrincipalExtensions
 {
-    /// <summary>
-    /// Get the user id stored in the JWT claims (claim type "userId").
-    /// Returns null if not present.
-    /// </summary>
+    // Get the user id stored in the JWT claims (claim type "userId")
     public static string? GetUserId(this ClaimsPrincipal? user) => user?.FindFirst("userId")?.Value;
 }
